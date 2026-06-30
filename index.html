@@ -123,6 +123,9 @@
   .totals .grand{font-size:13px;color:var(--navy)}
   .totals .grand b{font-size:22px;font-weight:800;color:var(--navy);margin-top:0;display:inline}
 
+  /* 금액 비표시: 반별 청구액 및 합계는 화면·인쇄 모두에서 숨김 (내부 계산·시트 전송은 유지) */
+  .clazz .amt,.totals{display:none !important}
+
   /* ---------- Checklists ---------- */
   .chk-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px 22px}
   .chk{display:flex;align-items:flex-start;gap:9px;font-size:13.5px;padding:3px 0;cursor:pointer}
@@ -574,8 +577,7 @@ function equipOptions(selected){
   let html = `<option value=""${selected===''?' selected':''}>교구 선택</option>`;
   allEquipment().forEach(e=>{
     const sel = (e.name===selected) ? ' selected' : '';
-    const label = (e.price>0) ? `${e.name} (${e.price.toLocaleString('ko-KR')}원)` : `${e.name} (단가 미설정)`;
-    html += `<option value="${esc(e.name)}"${sel}>${esc(label)}</option>`;
+    html += `<option value="${esc(e.name)}"${sel}>${esc(e.name)}</option>`;
   });
   html += `<option value="__custom__">＋ 교구 추가 / 관리…</option>`;
   return html;
