@@ -338,7 +338,7 @@
 
   <!-- ===== Header ===== -->
   <header class="app">
-    <button class="gear no-print" onclick="openAdmin()" title="관리자 설정">⚙️</button>
+    <button class="gear no-print" ondblclick="openAdmin()" title="더블클릭: 관리자 · 강사 명단 관리">⚙️</button>
     <div class="brand">
       <span class="logo">ENK&nbsp;LAB</span>
       <div>
@@ -498,6 +498,7 @@
         <input type="text" id="newInstName" placeholder="이름">
         <button class="btn btn-navy" style="padding:9px 14px" onclick="addInstructor()">＋ 추가</button>
       </div>
+      <p class="hint" style="margin:8px 0 0">※ [＋ 추가] 또는 하단 [저장]을 누르면 저장됩니다. 저장된 강사는 브라우저에 영구 보관되며, 오늘의 투입 명단 옆 [＋ 저장된 강사]에서 선택해 추가할 수 있습니다.</p>
     </div>
 
     <div class="field">
@@ -641,6 +642,7 @@ let PREP_ITEMS = [];         // 출강 준비물 체크리스트 항목(편집 �
 /* ---------- 상태 ---------- */
 let classData = [];          // [{grade, main, sub, equip, count}]
 let INSTRUCTORS = [];        // 저장된 강사 마스터 명단
+let currentRecordId = null;  // 현재 폼이 불러온 저장 레코드 id(덮어쓰기용)
 let GRADES = [];             // 대상 학년 목록
 let PERIODS = [];            // 차시 목록
 let COMPANIES = [];          // 출강 업체 목록
@@ -1351,10 +1353,17 @@ function isEmptyState(s){ return !s.date && !s.org && s.classes.length===0; }
 function saveCurrentRecord(){
   const s = collectState();
   if(isEmptyState(s)) return false;      // 빈 양식은 저장하지 않음
-  s.id = Date.now();
   s.savedAt = nowStamp();
-  RECORDS.unshift(s);
-  if(RECORDS.length > 60) RECORDS = RECORDS.slice(0,60);
+  const idx = (currentRecordId!=null) ? RECORDS.findIndex(r=>r.id===currentRecordId) : -1;
+  if(idx >= 0){
+    s.id = currentRecordId;              // 같은 항목에 덮어쓰기
+    RECORDS[idx] = s;
+  }else{
+    s.id = Date.now();
+    RECORDS.unshift(s);
+    currentRecordId = s.id;
+    if(RECORDS.length > 60) RECORDS = RECORDS.slice(0,60);
+  }
   saveRecords();
   renderRecords();
   return true;
@@ -1443,6 +1452,7 @@ function doLoadRecord(id){
   onMeta();
   const btn=$('sendBtn'); btn.disabled=false; btn.textContent='☁️ 구글 시트로 전송'; sent=false;
   hasPrinted=false; isDirty=false;
+  currentRecordId = id;            // 이후 저장은 이 항목에 덮어쓰기
   toast('저장된 목록을 불러왔습니다');
   window.scrollTo({top:0, behavior:'smooth'});
 }
@@ -1466,6 +1476,7 @@ function smartReset(){
   document.querySelectorAll('#adminChk input, #prepChk input').forEach(cb=>cb.checked=false);
   document.title='[ENK LAB] 출강 체크리스트';
   hasPrinted=false; isDirty=false;
+  currentRecordId = null;          // 새 양식 → 다음 저장은 신규 항목
 }
 
 /* ---------- 전체 초기화 (강사 명단까지 비움) ---------- */
@@ -1502,6 +1513,7 @@ function openAdmin(){
 }
 function closeAdmin(){ $('adminOverlay').classList.remove('on'); }
 function saveAdmin(){
+  if($('newInstName').value.trim()){ addInstructor(); }   // 입력만 하고 미추가한 강사도 저장
   lsSet(LS.gas, $('mGas').value.trim());
   const np = $('mPin').value.trim();
   if(np){
