@@ -87,6 +87,8 @@
     background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
     padding:18px 20px;margin-top:18px;box-shadow:var(--shadow);
   }
+  .card.tone-yellow{background:#FFFBEA;border-color:#F1E4B0}
+  .card.tone-green{background:#F1F8E9;border-color:#D3E7BE}
   .card > h2{
     font-size:14px;margin:0 0 14px;color:var(--navy);font-weight:700;letter-spacing:-.2px;
     display:flex;align-items:center;gap:8px;
@@ -242,6 +244,29 @@
     padding-top:4px;border-top:2px dashed var(--line);margin-top:2px;padding-top:14px;
   }
   .equip-add input{font-size:13px}
+  /* 체크리스트 관리 */
+  #clList{max-height:46vh;overflow:auto;border:1px solid var(--line);border-radius:9px;margin-bottom:14px}
+  .cl-row{grid-template-columns:1fr 30px !important}
+  .cl-row input{text-align:left !important}
+  .cl-add{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;
+    padding-top:14px;border-top:2px dashed var(--line)}
+  .cl-add input{font-size:13px}
+  /* 강사 명단 관리 */
+  #instList{max-height:34vh;overflow:auto;border:1px solid var(--line);border-radius:9px;margin-bottom:10px}
+  .inst-row{display:grid;grid-template-columns:1fr 1fr 30px;gap:8px;align-items:center;
+    padding:7px 10px;border-bottom:1px solid var(--line)}
+  .inst-row:last-child{border-bottom:none}
+  .inst-row input{padding:6px 9px;font-size:13px}
+  .inst-empty{font-size:12.5px;color:var(--muted);text-align:center;padding:16px 0}
+  .inst-add{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center}
+  .inst-add input{font-size:13px}
+  /* 오늘의 투입 명단 선택 추가 */
+  .roster-row{display:flex;gap:8px;align-items:center}
+  .roster-row #fRoster{flex:1}
+  .roster-pick{width:auto;min-width:118px;flex:none}
+  /* 이동 저장 확인 */
+  .leave-actions{display:flex;flex-direction:column;gap:9px;margin-top:6px}
+  .leave-actions .btn{width:100%}
 
   /* ---------- Toast ---------- */
   #toast{
@@ -286,6 +311,7 @@
     .gear,.btn,.actions,.stepper,.del-btn,.hint,.count-ctrl .stepper,#toast,.overlay,.no-print{display:none !important}
     .card{box-shadow:none;border:1px solid #C9D3DC;border-radius:0;margin-top:8px;padding:9px 11px;
       page-break-inside:avoid;break-inside:avoid}
+    .card.tone-yellow,.card.tone-green{background:#fff !important}
     .card > h2{margin-bottom:7px;font-size:11px}
     .card > h2 .tag{display:none}
     .clazz{background:#fff;page-break-inside:avoid;padding:8px}
@@ -323,7 +349,7 @@
   </header>
 
   <!-- ===== 1. 기본 정보 ===== -->
-  <section class="card">
+  <section class="card tone-yellow">
     <h2>기본 정보 <span class="tag">출강 개요</span></h2>
     <div class="grid g3">
       <div class="field">
@@ -342,6 +368,20 @@
         <input type="text" id="fOrg" placeholder="예: ○○초등학교" oninput="onMeta()">
       </div>
     </div>
+    <div class="grid g3" style="margin-top:14px">
+      <div class="field">
+        <label for="fPeriod">차시</label>
+        <select id="fPeriod" onchange="onPeriodChange(this)"></select>
+      </div>
+      <div class="field">
+        <label for="fStart">수업 시작시간</label>
+        <input type="time" id="fStart" oninput="setDirty()">
+      </div>
+      <div class="field">
+        <label for="fEnd">수업 종료시간</label>
+        <input type="time" id="fEnd" oninput="setDirty()">
+      </div>
+    </div>
     <div class="grid g2" style="margin-top:14px">
       <div class="field">
         <label for="fGrade">대상 학년 <span style="font-weight:400;color:var(--muted);font-size:11px">(기본/대표)</span></label>
@@ -349,14 +389,17 @@
       </div>
       <div class="field">
         <label for="fRoster">오늘의 투입 강사 명단</label>
-        <input type="text" id="fRoster" placeholder="콤마로 구분 · 예: 김유니, 박코딩, 이메이커" oninput="onRoster()">
+        <div class="roster-row">
+          <input type="text" id="fRoster" placeholder="콤마로 구분 · 예: 김유니, 박코딩, 이메이커" oninput="onRoster()">
+          <select id="fInstructorPick" class="roster-pick no-print" onchange="pickInstructor(this)" title="저장된 강사에서 추가"></select>
+        </div>
       </div>
     </div>
-    <p class="hint" style="margin-top:10px">※ 강사 명단은 자동 저장되어 다음 실행 시에도 유지되며, 반별 강사 입력 시 자동완성으로 추천됩니다.</p>
+    <p class="hint" style="margin-top:10px">※ 강사 명단은 자동 저장되어 다음 실행 시에도 유지되며, 반별 강사 입력 시 자동완성으로 추천됩니다. 우측 [＋ 저장된 강사]로 미리 저장한 강사를 골라 추가할 수 있습니다(저장·관리는 우측 상단 ⚙️).</p>
   </section>
 
   <!-- ===== 1-2. 출강 업체 · 프로그램 ===== -->
-  <section class="card">
+  <section class="card tone-green">
     <h2>출강 업체 · 프로그램 <span class="tag">선택 · 직접 추가</span></h2>
     <div class="grid g2">
       <div class="field">
@@ -401,13 +444,17 @@
 
   <!-- ===== 3. 사전 행정 체크리스트 ===== -->
   <section class="card">
-    <h2>사전 행정 체크리스트 <span class="tag">10항목</span></h2>
+    <h2>사전 행정 체크리스트 <span class="tag">추가 · 수정</span>
+      <button class="manage-btn no-print" onclick="openChecklistManager('admin')">📝 항목 관리</button>
+    </h2>
     <div class="chk-grid" id="adminChk"></div>
   </section>
 
   <!-- ===== 4. 출강 준비물 체크리스트 ===== -->
   <section class="card">
-    <h2>출강 준비물 체크리스트 <span class="tag">7항목</span></h2>
+    <h2>출강 준비물 체크리스트 <span class="tag">추가 · 수정</span>
+      <button class="manage-btn no-print" onclick="openChecklistManager('prep')">📝 항목 관리</button>
+    </h2>
     <div class="chk-grid" id="prepChk"></div>
   </section>
 
@@ -439,9 +486,20 @@
 
 <!-- ===== Admin Modal ===== -->
 <div class="overlay" id="adminOverlay">
-  <div class="modal">
+  <div class="modal wide">
     <h3>관리자 설정</h3>
-    <p class="lead">구글 시트 전송 주소와 PIN 번호를 관리합니다.</p>
+    <p class="lead">강사 명단, 구글 시트 전송 주소, PIN 번호를 관리합니다.</p>
+
+    <div class="field">
+      <label>강사 명단 관리 <span style="font-weight:400;color:var(--muted);font-size:11px">(소속 · 이름)</span></label>
+      <div id="instList"></div>
+      <div class="inst-add">
+        <input type="text" id="newInstOrg" placeholder="소속">
+        <input type="text" id="newInstName" placeholder="이름">
+        <button class="btn btn-navy" style="padding:9px 14px" onclick="addInstructor()">＋ 추가</button>
+      </div>
+    </div>
+
     <div class="field">
       <label for="mGas">Google Apps Script URL</label>
       <input type="text" id="mGas" placeholder="https://script.google.com/macros/s/.../exec">
@@ -451,8 +509,21 @@
       <input type="text" id="mPin" inputmode="numeric" maxlength="8" placeholder="비워두면 기존 PIN 유지">
     </div>
     <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeAdmin()">취소</button>
+      <button class="btn btn-ghost" onclick="closeAdmin()">닫기</button>
       <button class="btn btn-navy" onclick="saveAdmin()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 이동 저장 확인 Modal ===== -->
+<div class="overlay" id="leaveOverlay">
+  <div class="modal">
+    <h3>저장하시겠습니까?</h3>
+    <p class="lead" id="leaveMsg">작성 중인 내용이 아직 저장되지 않았습니다.</p>
+    <div class="leave-actions">
+      <button class="btn btn-navy" onclick="leaveSaveAndGo()">💾 저장하고 이동</button>
+      <button class="btn btn-ghost" onclick="leaveDiscardAndGo()">저장 안 하고 이동</button>
+      <button class="btn btn-ghost" onclick="leaveCancel()">취소</button>
     </div>
   </div>
 </div>
@@ -474,6 +545,22 @@
   </div>
 </div>
 
+<!-- ===== 체크리스트 항목 관리 Modal ===== -->
+<div class="overlay" id="clOverlay">
+  <div class="modal wide">
+    <h3 id="clMgrTitle">체크리스트 관리</h3>
+    <p class="lead">기존 항목을 수정·삭제하거나 새 항목을 추가합니다. 변경 사항은 자동 저장되어 다음 실행에도 유지됩니다.</p>
+    <div id="clList"></div>
+    <div class="cl-add">
+      <input type="text" id="clNewName" placeholder="새 체크 항목">
+      <button class="btn btn-navy" style="padding:9px 16px" onclick="addClItem()">＋ 추가</button>
+    </div>
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="btn btn-navy" onclick="closeChecklistManager()">완료</button>
+    </div>
+  </div>
+</div>
+
 <datalist id="instructorList"></datalist>
 <div id="toast"></div>
 
@@ -486,8 +573,12 @@
 /* ---------- 상수 ---------- */
 const LS = {
   roster:'enklab_roster',
+  instructors:'enklab_instructors_v1', // 저장된 강사 마스터 명단(소속·이름)
   equip:'enklab_equipment_v3',   // 교구 목록(단가 포함) 전체를 영구 저장
   grades:'enklab_grades_v1',     // 대상 학년 목록
+  periods:'enklab_periods_v1',   // 차시 목록
+  adminItems:'enklab_admin_items_v1', // 사전 행정 체크리스트 항목
+  prepItems:'enklab_prep_items_v1',   // 출강 준비물 체크리스트 항목
   companies:'enklab_companies_v1', // 출강 업체 목록
   programs:'enklab_programs_v1',  // 프로그램명 목록
   records:'enklab_records_v1',   // 저장된 출강 목록
@@ -497,6 +588,7 @@ const LS = {
 const MASTER_KEY = 'ENKLAB2026';
 
 const DEFAULT_GRADES = ['7세','초1','초2','초3','초4','초5','초6','중1','중2','중3','고1','고2','고3'];
+const DEFAULT_PERIODS = ['1교시','2교시','3교시','4교시','5교시','6교시'];
 const DEFAULT_COMPANIES = ['울산비전진로','한국비전진로','(주)에이블','모두행복'];
 const DEFAULT_PROGRAMS = ['ENK AI융합진로캠프','ENK 창의융합메이커','리더십캠프','진로캠프','창직캠프',
   'ENK AI로봇코딩캠프','ENK 창의로봇캠프','ENK 자율주행캠프'];
@@ -539,14 +631,18 @@ const DEFAULT_EQUIPMENT = [
   {name:'홀로그램',          price:1500}
 ];
 
-const ADMIN_ITEMS = ['견적서','통장사본','사업자등록증','제안서','강의계획서',
+const DEFAULT_ADMIN_ITEMS = ['견적서','통장사본','사업자등록증','제안서','강의계획서',
   '성범죄동의서','강사카드','계약이행통합서약서','강사단톡방 개설','강사섭외 공지'];
-const PREP_ITEMS = ['교구 반별 폴리백 분류','성장 설문지 반별 30장 인쇄','현수막 반별 챙김',
+const DEFAULT_PREP_ITEMS = ['교구 반별 폴리백 분류','성장 설문지 반별 30장 인쇄','현수막 반별 챙김',
   '압정·자석 4EA세트','강사명찰','반별 간식','코칭세트(유성매직 12색·문구세트)'];
+let ADMIN_ITEMS = [];        // 사전 행정 체크리스트 항목(편집 가능)
+let PREP_ITEMS = [];         // 출강 준비물 체크리스트 항목(편집 가능)
 
 /* ---------- 상태 ---------- */
 let classData = [];          // [{grade, main, sub, equip, count}]
+let INSTRUCTORS = [];        // 저장된 강사 마스터 명단
 let GRADES = [];             // 대상 학년 목록
+let PERIODS = [];            // 차시 목록
 let COMPANIES = [];          // 출강 업체 목록
 let PROGRAMS = [];           // 프로그램명 목록
 let RECORDS = [];            // 저장된 출강 목록
@@ -633,6 +729,19 @@ function optionList(items, selected, token){
   html += `<option value="${token}">＋ 직접 입력…</option>`;
   return html;
 }
+function loadPeriods(){ try{const s=JSON.parse(lsGet(LS.periods)); if(Array.isArray(s)&&s.length){PERIODS=s;return;}}catch(e){} PERIODS=DEFAULT_PERIODS.slice(); savePeriods(); }
+function savePeriods(){ lsSet(LS.periods, JSON.stringify(PERIODS)); }
+function renderPeriodSelect(){ $('fPeriod').innerHTML = optionList(PERIODS, $('fPeriod').value, '__addperiod__'); }
+function onPeriodChange(sel){
+  setDirty();
+  if(sel.value === '__addperiod__'){
+    const v = (prompt('추가할 차시를 입력하세요 (예: 7교시, 1~2교시, 전일)') || '').trim();
+    if(v && !PERIODS.includes(v)){ PERIODS.push(v); savePeriods(); }
+    renderPeriodSelect(); $('fPeriod').value = v || '';
+    if(v) toast('차시가 추가되었습니다');
+    return;
+  }
+}
 function loadCompanies(){ try{const s=JSON.parse(lsGet(LS.companies)); if(Array.isArray(s)&&s.length){COMPANIES=s;return;}}catch(e){} COMPANIES=DEFAULT_COMPANIES.slice(); saveCompanies(); }
 function saveCompanies(){ lsSet(LS.companies, JSON.stringify(COMPANIES)); }
 function loadPrograms(){ try{const s=JSON.parse(lsGet(LS.programs)); if(Array.isArray(s)&&s.length){PROGRAMS=s;return;}}catch(e){} PROGRAMS=DEFAULT_PROGRAMS.slice(); savePrograms(); }
@@ -702,6 +811,72 @@ function onRoster(){
   lsSet(LS.roster, $('fRoster').value);
   refreshDatalist();
 }
+
+/* ---------- 저장된 강사 마스터 명단 (소속·이름) ---------- */
+function loadInstructors(){
+  try{ const s=JSON.parse(lsGet(LS.instructors)); INSTRUCTORS = Array.isArray(s)?s:[]; }
+  catch(e){ INSTRUCTORS = []; }
+}
+function saveInstructors(){ lsSet(LS.instructors, JSON.stringify(INSTRUCTORS)); }
+
+/* 오늘의 투입 명단 옆 '저장된 강사에서 추가' 드롭다운 */
+function renderInstructorPicker(){
+  const sel = $('fInstructorPick');
+  if(!sel) return;
+  let html = `<option value="">＋ 저장된 강사</option>`;
+  INSTRUCTORS.forEach(it=>{
+    const label = it.org ? `${it.name} (${it.org})` : it.name;
+    html += `<option value="${it.id}">${esc(label)}</option>`;
+  });
+  sel.innerHTML = html;
+}
+function pickInstructor(sel){
+  const it = INSTRUCTORS.find(x=>String(x.id)===String(sel.value));
+  sel.selectedIndex = 0;
+  if(!it) return;
+  const names = rosterNames();
+  if(names.includes(it.name)){ toast('이미 명단에 있습니다'); return; }
+  names.push(it.name);
+  $('fRoster').value = names.join(', ');
+  onRoster();
+  toast(`${it.name} 추가`);
+}
+
+/* 관리자 모달 내 강사 명단 편집 */
+function renderInstructorList(){
+  const box = $('instList');
+  if(!box) return;
+  box.innerHTML = INSTRUCTORS.length
+    ? INSTRUCTORS.map((it,idx)=>`
+      <div class="inst-row">
+        <input type="text" value="${esc(it.org||'')}" placeholder="소속" oninput="editInstructor(${idx},'org',this.value)">
+        <input type="text" value="${esc(it.name||'')}" placeholder="이름" oninput="editInstructor(${idx},'name',this.value)">
+        <button class="del-mini" title="삭제" onclick="removeInstructor(${idx})">✖</button>
+      </div>`).join('')
+    : `<div class="inst-empty">저장된 강사가 없습니다.</div>`;
+}
+function editInstructor(idx, field, val){
+  INSTRUCTORS[idx][field] = val;
+  saveInstructors();
+  renderInstructorPicker();
+}
+function removeInstructor(idx){
+  if(!confirm(`"${INSTRUCTORS[idx].name||'이 강사'}"를 저장 명단에서 삭제할까요?`)) return;
+  INSTRUCTORS.splice(idx,1);
+  saveInstructors(); renderInstructorList(); renderInstructorPicker();
+}
+function addInstructor(){
+  const org = $('newInstOrg').value.trim();
+  const name = $('newInstName').value.trim();
+  if(!name){ toast('이름을 입력하세요'); $('newInstName').focus(); return; }
+  if(INSTRUCTORS.some(x=>x.name===name && (x.org||'')===org)){ toast('이미 등록된 강사입니다'); return; }
+  INSTRUCTORS.push({id:Date.now(), org, name});
+  saveInstructors();
+  $('newInstOrg').value=''; $('newInstName').value='';
+  renderInstructorList(); renderInstructorPicker(); $('newInstOrg').focus();
+  toast('강사가 저장되었습니다');
+}
+
 function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
 /* ---------- 반 개수 제어 ---------- */
@@ -917,8 +1092,33 @@ function renderCoaching(){
     </label>`).join('');
 }
 
-/* ---------- 체크리스트 렌더 ---------- */
+/* ---------- 체크리스트 항목 목록 ---------- */
+function loadChecklistItems(){
+  try{ const a=JSON.parse(lsGet(LS.adminItems)); ADMIN_ITEMS = (Array.isArray(a)&&a.length)?a:DEFAULT_ADMIN_ITEMS.slice(); }
+  catch(e){ ADMIN_ITEMS = DEFAULT_ADMIN_ITEMS.slice(); }
+  try{ const p=JSON.parse(lsGet(LS.prepItems)); PREP_ITEMS = (Array.isArray(p)&&p.length)?p:DEFAULT_PREP_ITEMS.slice(); }
+  catch(e){ PREP_ITEMS = DEFAULT_PREP_ITEMS.slice(); }
+}
+function saveAdminItems(){ lsSet(LS.adminItems, JSON.stringify(ADMIN_ITEMS)); }
+function savePrepItems(){ lsSet(LS.prepItems, JSON.stringify(PREP_ITEMS)); }
+
+function checkedLabels(sel){
+  const out=[]; document.querySelectorAll(sel+' input:checked').forEach(cb=>out.push(cb.dataset.label)); return out;
+}
+function applyChecks(sel, saved){
+  const boxes = document.querySelectorAll(sel+' input');
+  if(!Array.isArray(saved)) return;
+  const byLabel = saved.length===0 || saved.every(x=>typeof x==='string');
+  boxes.forEach((cb,i)=>{
+    if(byLabel) cb.checked = saved.includes(cb.dataset.label);
+    else if(typeof saved[i]==='boolean') cb.checked = saved[i];
+  });
+}
+
+/* ---------- 체크리스트 렌더 (체크 상태 보존) ---------- */
 function renderChecklists(){
+  const prevA = checkedLabels('#adminChk');
+  const prevP = checkedLabels('#prepChk');
   const build = (arr, prefix) => arr.map((t,idx)=>`
     <label class="chk">
       <input type="checkbox" data-label="${esc(t)}" id="${prefix}${idx}" onchange="setDirty()">
@@ -926,7 +1126,49 @@ function renderChecklists(){
     </label>`).join('');
   $('adminChk').innerHTML = build(ADMIN_ITEMS,'adm');
   $('prepChk').innerHTML  = build(PREP_ITEMS,'prep');
+  applyChecks('#adminChk', prevA);
+  applyChecks('#prepChk', prevP);
 }
+
+/* ---------- 체크리스트 관리 모달 ---------- */
+let clMgrType = 'admin';
+function currentClList(){ return clMgrType==='admin' ? ADMIN_ITEMS : PREP_ITEMS; }
+function persistClList(){ clMgrType==='admin' ? saveAdminItems() : savePrepItems(); }
+function openChecklistManager(type){
+  clMgrType = type;
+  $('clMgrTitle').textContent = (type==='admin') ? '사전 행정 체크리스트 관리' : '출강 준비물 체크리스트 관리';
+  $('clNewName').value = '';
+  renderChecklistManager();
+  $('clOverlay').classList.add('on');
+  setTimeout(()=>$('clNewName').focus(), 50);
+}
+function renderChecklistManager(){
+  $('clList').innerHTML = currentClList().map((t,idx)=>`
+    <div class="equip-row cl-row">
+      <input type="text" value="${esc(t)}" oninput="editClItem(${idx}, this.value)" placeholder="항목명">
+      <button class="del-mini" title="삭제" onclick="removeClItem(${idx})">✖</button>
+    </div>`).join('');
+}
+function editClItem(idx, val){ currentClList()[idx] = val; persistClList(); }
+function removeClItem(idx){
+  const list = currentClList();
+  if(!confirm(`"${list[idx]}" 항목을 삭제할까요?`)) return;
+  list.splice(idx,1); persistClList(); renderChecklistManager();
+}
+function addClItem(){
+  const v = $('clNewName').value.trim();
+  if(!v){ toast('항목을 입력하세요'); $('clNewName').focus(); return; }
+  const list = currentClList();
+  if(list.includes(v)){ toast('이미 있는 항목입니다'); return; }
+  list.push(v); persistClList();
+  $('clNewName').value=''; renderChecklistManager(); $('clNewName').focus();
+  toast('항목이 추가되었습니다');
+}
+function closeChecklistManager(){
+  $('clOverlay').classList.remove('on');
+  renderChecklists();   // 항목 변경을 체크박스에 반영(체크 상태 보존)
+}
+
 function uncheckedList(){
   const out = [];
   document.querySelectorAll('#adminChk input, #prepChk input').forEach(cb=>{
@@ -981,6 +1223,11 @@ function copyKakao(){
   if($('fCompany').value) L.push(`🏢 업체 : ${$('fCompany').value}`);
   if($('fProgram').value) L.push(`📚 프로그램 : ${$('fProgram').value}`);
   if($('fDate').value) L.push(`🗓 일시 : ${$('fDate').value}`);
+  {
+    const per = $('fPeriod').value, st = $('fStart').value, en = $('fEnd').value;
+    const time = (st && en) ? `${st}~${en}` : (st || en || '');
+    if(per || time) L.push(`⏰ 시간 : ${[per, time].filter(Boolean).join(' · ')}`);
+  }
   L.push(`📍 장소 : ${$('fRegion').value} ${$('fOrg').value.trim()}`);
   L.push(`🎓 대상 : ${$('fGrade').value}`);
   L.push('');
@@ -1042,6 +1289,9 @@ function sendToSheet(){
     org: $('fOrg').value.trim(),
     company: $('fCompany').value,
     program: $('fProgram').value,
+    period: $('fPeriod').value,
+    startTime: $('fStart').value,
+    endTime: $('fEnd').value,
     grade: $('fGrade').value,
     instructors: $('fRoster').value.trim(),
     classes: classData.map((c,i)=>({
@@ -1083,15 +1333,15 @@ function loadRecords(){
 function saveRecords(){ lsSet(LS.records, JSON.stringify(RECORDS)); }
 
 function collectState(){
-  const admin=[], prep=[];
-  document.querySelectorAll('#adminChk input').forEach(cb=>admin.push(cb.checked));
-  document.querySelectorAll('#prepChk input').forEach(cb=>prep.push(cb.checked));
+  const admin = checkedLabels('#adminChk');
+  const prep  = checkedLabels('#prepChk');
   const coaching=[];
   document.querySelectorAll('#coachWrap input:checked').forEach(cb=>coaching.push(cb.dataset.name));
   return {
     date:$('fDate').value, region:$('fRegion').value, org:$('fOrg').value.trim(),
     grade:$('fGrade').value, roster:$('fRoster').value.trim(),
     company:$('fCompany').value, program:$('fProgram').value,
+    period:$('fPeriod').value, startTime:$('fStart').value, endTime:$('fEnd').value,
     classes: classData.map((c,i)=>({label:c.label||((i+1)+'반'), grade:c.grade||'', main:c.main, sub:c.sub, equip:c.equip, count:c.count})),
     admin, prep, coaching
   };
@@ -1116,7 +1366,7 @@ function renderRecords(){
     const cls = r.classes && r.classes.length ? ` · ${r.classes.length}개 반` : '';
     const meta = [r.company, r.program].filter(Boolean).join(' · ');
     return `
-    <div class="rec" onclick="loadRecord(${r.id})">
+    <div class="rec" onclick="requestLoadRecord(${r.id})">
       <button class="rec-del" title="삭제" onclick="event.stopPropagation();deleteRecord(${r.id})">✖</button>
       <div class="rec-date">🗓 ${esc(r.date || '날짜 미정')}</div>
       <div class="rec-org">${esc(r.org || '기관 미정')}</div>
@@ -1125,10 +1375,34 @@ function renderRecords(){
     </div>`;
   }).join('');
 }
-function loadRecord(id){
+let pendingLoadId = null;
+function requestLoadRecord(id){
+  if(isDirty && !isEmptyState(collectState())){
+    pendingLoadId = id;
+    $('leaveMsg').textContent = '작성 중인 내용이 아직 저장되지 않았습니다. 저장하시겠습니까?';
+    $('leaveOverlay').classList.add('on');
+    return;
+  }
+  doLoadRecord(id);
+}
+function leaveSaveAndGo(){
+  const id = pendingLoadId; pendingLoadId = null;
+  $('leaveOverlay').classList.remove('on');
+  saveCurrentRecord();
+  if(id != null) doLoadRecord(id);
+  else { fullReset(); }
+}
+function leaveDiscardAndGo(){
+  const id = pendingLoadId; pendingLoadId = null;
+  $('leaveOverlay').classList.remove('on');
+  if(id != null) doLoadRecord(id);
+  else { fullReset(); }
+}
+function leaveCancel(){ pendingLoadId = null; $('leaveOverlay').classList.remove('on'); }
+
+function doLoadRecord(id){
   const r = RECORDS.find(x=>x.id===id);
   if(!r) return;
-  if(isDirty && !confirm('현재 작성 중인 내용이 사라집니다. 저장된 목록을 불러올까요?\n(필요하면 먼저 [새로 작성하기]로 저장하세요)')) return;
 
   // 목록에만 있는 학년이 있으면 학년 목록에 복원
   [r.grade, ...(r.classes||[]).map(c=>c.grade)].filter(Boolean).forEach(g=>{
@@ -1137,6 +1411,7 @@ function loadRecord(id){
   saveGrades();
   if(r.company && !COMPANIES.includes(r.company)){ COMPANIES.push(r.company); saveCompanies(); }
   if(r.program && !PROGRAMS.includes(r.program)){ PROGRAMS.push(r.program); savePrograms(); }
+  if(r.period && !PERIODS.includes(r.period)){ PERIODS.push(r.period); savePeriods(); }
 
   $('fDate').value = r.date || '';
   $('fRegion').value = r.region || '경북';
@@ -1148,6 +1423,9 @@ function loadRecord(id){
   $('fGrade').value = r.grade || '';
   renderCompanySelect(); $('fCompany').value = r.company || '';
   renderProgramSelect(); $('fProgram').value = r.program || '';
+  renderPeriodSelect(); $('fPeriod').value = r.period || '';
+  $('fStart').value = r.startTime || '';
+  $('fEnd').value = r.endTime || '';
 
   classData = (r.classes||[]).map((c,idx)=>({
     label:c.label||((idx+1)+'반'), grade:c.grade||'', main:c.main||'', sub:c.sub||'', equip:c.equip||'',
@@ -1156,10 +1434,8 @@ function loadRecord(id){
   $('fCount').value = classData.length;
   renderClasses();
 
-  const adm = document.querySelectorAll('#adminChk input');
-  (r.admin||[]).forEach((v,i)=>{ if(adm[i]) adm[i].checked = v; });
-  const pre = document.querySelectorAll('#prepChk input');
-  (r.prep||[]).forEach((v,i)=>{ if(pre[i]) pre[i].checked = v; });
+  applyChecks('#adminChk', r.admin||[]);
+  applyChecks('#prepChk',  r.prep||[]);
   document.querySelectorAll('#coachWrap input').forEach(cb=>{
     cb.checked = (r.coaching||[]).includes(cb.dataset.name);
   });
@@ -1184,6 +1460,8 @@ function smartReset(){
   renderTopGrade(); $('fGrade').selectedIndex=0;
   renderCompanySelect(); $('fCompany').selectedIndex=0;
   renderProgramSelect(); $('fProgram').selectedIndex=0;
+  renderPeriodSelect(); $('fPeriod').selectedIndex=0;
+  $('fStart').value=''; $('fEnd').value='';
   $('fCount').value=0; classData=[]; renderClasses();
   document.querySelectorAll('#adminChk input, #prepChk input').forEach(cb=>cb.checked=false);
   document.title='[ENK LAB] 출강 체크리스트';
@@ -1216,6 +1494,7 @@ function openAdmin(){
   if(input === getPin()){
     $('mGas').value = getGas();
     $('mPin').value = '';
+    renderInstructorList();
     $('adminOverlay').classList.add('on');
   }else{
     alert('PIN 번호가 일치하지 않습니다.');
@@ -1235,6 +1514,8 @@ function saveAdmin(){
 // 오버레이 바깥 클릭 시 닫기
 $('adminOverlay').addEventListener('click', e=>{ if(e.target===$('adminOverlay')) closeAdmin(); });
 $('equipOverlay').addEventListener('click', e=>{ if(e.target===$('equipOverlay')) closeEquipManager(); });
+$('clOverlay').addEventListener('click', e=>{ if(e.target===$('clOverlay')) closeChecklistManager(); });
+$('leaveOverlay').addEventListener('click', e=>{ if(e.target===$('leaveOverlay')) leaveCancel(); });
 
 /* ---------- 이탈 방지 ---------- */
 window.addEventListener('beforeunload', e=>{
@@ -1245,12 +1526,17 @@ window.addEventListener('beforeunload', e=>{
 (function init(){
   loadEquip();                 // 교구 33종 목록 로드/시드
   loadGrades();                // 대상 학년 목록 로드/시드
+  loadPeriods();               // 차시 목록 로드/시드
+  loadChecklistItems();        // 체크리스트 항목 로드/시드
   loadCompanies();             // 출강 업체 목록 로드/시드
   loadPrograms();              // 프로그램명 목록 로드/시드
   loadRecords();               // 저장된 출강 목록 로드
+  loadInstructors();           // 저장된 강사 마스터 명단 로드
   const r = lsGet(LS.roster); if(r){ $('fRoster').value = r; }  // 강사 명단 복원
   refreshDatalist();
+  renderInstructorPicker();
   renderTopGrade();
+  renderPeriodSelect();
   renderCompanySelect();
   renderProgramSelect();
   renderChecklists();
