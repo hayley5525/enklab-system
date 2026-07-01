@@ -262,6 +262,8 @@
   .inst-add input{font-size:13px}
   /* 오늘의 투입 명단 선택 추가 */
   .roster-row{display:flex;gap:8px;align-items:center}
+  .label-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .label-row .manage-btn{margin-left:auto}
   .roster-row #fRoster{flex:1}
   .roster-pick{width:auto;min-width:118px;flex:none}
   /* 이동 저장 확인 */
@@ -338,7 +340,7 @@
 
   <!-- ===== Header ===== -->
   <header class="app">
-    <button class="gear no-print" ondblclick="openAdmin()" title="더블클릭: 관리자 · 강사 명단 관리">⚙️</button>
+    <button class="gear no-print" onclick="openAdmin()" title="관리자 설정 (구글 시트 · PIN)">⚙️</button>
     <div class="brand">
       <span class="logo">ENK&nbsp;LAB</span>
       <div>
@@ -388,14 +390,17 @@
         <select id="fGrade" onchange="onGradeChange(this)"></select>
       </div>
       <div class="field">
-        <label for="fRoster">오늘의 투입 강사 명단</label>
+        <label for="fRoster" class="label-row">
+          <span>오늘의 투입 강사 명단</span>
+          <button type="button" class="manage-btn no-print" onclick="openInstructorManager()">👥 강사 저장·관리</button>
+        </label>
         <div class="roster-row">
           <input type="text" id="fRoster" placeholder="콤마로 구분 · 예: 김유니, 박코딩, 이메이커" oninput="onRoster()">
           <select id="fInstructorPick" class="roster-pick no-print" onchange="pickInstructor(this)" title="저장된 강사에서 추가"></select>
         </div>
       </div>
     </div>
-    <p class="hint" style="margin-top:10px">※ 강사 명단은 자동 저장되어 다음 실행 시에도 유지되며, 반별 강사 입력 시 자동완성으로 추천됩니다. 우측 [＋ 저장된 강사]로 미리 저장한 강사를 골라 추가할 수 있습니다(저장·관리는 우측 상단 ⚙️).</p>
+    <p class="hint" style="margin-top:10px">※ 강사 명단은 자동 저장되어 다음 실행 시에도 유지되며, 반별 강사 입력 시 자동완성으로 추천됩니다. [👥 강사 저장·관리]로 강사를 등록하면 우측 [＋ 저장된 강사]에서 골라 추가할 수 있습니다.</p>
   </section>
 
   <!-- ===== 1-2. 출강 업체 · 프로그램 ===== -->
@@ -486,20 +491,9 @@
 
 <!-- ===== Admin Modal ===== -->
 <div class="overlay" id="adminOverlay">
-  <div class="modal wide">
+  <div class="modal">
     <h3>관리자 설정</h3>
-    <p class="lead">강사 명단, 구글 시트 전송 주소, PIN 번호를 관리합니다.</p>
-
-    <div class="field">
-      <label>강사 명단 관리 <span style="font-weight:400;color:var(--muted);font-size:11px">(소속 · 이름)</span></label>
-      <div id="instList"></div>
-      <div class="inst-add">
-        <input type="text" id="newInstOrg" placeholder="소속">
-        <input type="text" id="newInstName" placeholder="이름">
-        <button class="btn btn-navy" style="padding:9px 14px" onclick="addInstructor()">＋ 추가</button>
-      </div>
-      <p class="hint" style="margin:8px 0 0">※ [＋ 추가] 또는 하단 [저장]을 누르면 저장됩니다. 저장된 강사는 브라우저에 영구 보관되며, 오늘의 투입 명단 옆 [＋ 저장된 강사]에서 선택해 추가할 수 있습니다.</p>
-    </div>
+    <p class="lead">구글 시트 전송 주소와 PIN 번호를 관리합니다.</p>
 
     <div class="field">
       <label for="mGas">Google Apps Script URL</label>
@@ -525,6 +519,24 @@
       <button class="btn btn-navy" onclick="leaveSaveAndGo()">💾 저장하고 이동</button>
       <button class="btn btn-ghost" onclick="leaveDiscardAndGo()">저장 안 하고 이동</button>
       <button class="btn btn-ghost" onclick="leaveCancel()">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 강사 명단 관리 Modal ===== -->
+<div class="overlay" id="instOverlay">
+  <div class="modal wide">
+    <h3>강사 명단 관리</h3>
+    <p class="lead">소속·이름으로 강사를 저장합니다. 기존 강사는 그 자리에서 수정하거나 ✖로 삭제할 수 있습니다. 저장된 강사는 브라우저에 영구 보관됩니다.</p>
+    <div id="instList"></div>
+    <div class="inst-add">
+      <input type="text" id="newInstOrg" placeholder="소속">
+      <input type="text" id="newInstName" placeholder="이름">
+      <button class="btn btn-navy" style="padding:9px 14px" onclick="addInstructor()">＋ 추가</button>
+    </div>
+    <p class="hint" style="margin:8px 0 0">※ 저장한 강사는 [오늘의 투입 강사 명단] 옆 [＋ 저장된 강사]에서 선택해 추가할 수 있습니다.</p>
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="btn btn-navy" onclick="closeInstructorManager()">완료</button>
     </div>
   </div>
 </div>
@@ -877,6 +889,16 @@ function addInstructor(){
   $('newInstOrg').value=''; $('newInstName').value='';
   renderInstructorList(); renderInstructorPicker(); $('newInstOrg').focus();
   toast('강사가 저장되었습니다');
+}
+function openInstructorManager(){
+  $('newInstOrg').value=''; $('newInstName').value='';
+  renderInstructorList();
+  $('instOverlay').classList.add('on');
+  setTimeout(()=>$('newInstOrg').focus(), 50);
+}
+function closeInstructorManager(){
+  if($('newInstName').value.trim()){ addInstructor(); }  // 입력만 하고 미추가한 강사도 저장
+  $('instOverlay').classList.remove('on');
 }
 
 function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -1505,7 +1527,6 @@ function openAdmin(){
   if(input === getPin()){
     $('mGas').value = getGas();
     $('mPin').value = '';
-    renderInstructorList();
     $('adminOverlay').classList.add('on');
   }else{
     alert('PIN 번호가 일치하지 않습니다.');
@@ -1513,7 +1534,6 @@ function openAdmin(){
 }
 function closeAdmin(){ $('adminOverlay').classList.remove('on'); }
 function saveAdmin(){
-  if($('newInstName').value.trim()){ addInstructor(); }   // 입력만 하고 미추가한 강사도 저장
   lsSet(LS.gas, $('mGas').value.trim());
   const np = $('mPin').value.trim();
   if(np){
@@ -1528,6 +1548,7 @@ $('adminOverlay').addEventListener('click', e=>{ if(e.target===$('adminOverlay')
 $('equipOverlay').addEventListener('click', e=>{ if(e.target===$('equipOverlay')) closeEquipManager(); });
 $('clOverlay').addEventListener('click', e=>{ if(e.target===$('clOverlay')) closeChecklistManager(); });
 $('leaveOverlay').addEventListener('click', e=>{ if(e.target===$('leaveOverlay')) leaveCancel(); });
+$('instOverlay').addEventListener('click', e=>{ if(e.target===$('instOverlay')) closeInstructorManager(); });
 
 /* ---------- 이탈 방지 ---------- */
 window.addEventListener('beforeunload', e=>{
