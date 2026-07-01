@@ -127,6 +127,14 @@
     background:var(--navy);color:#fff;font-weight:700;font-size:12.5px;
     border-radius:7px;padding:4px 12px;letter-spacing:.2px;
   }
+  .clazz .badge-select{
+    background:var(--navy);color:#fff;font-weight:700;font-size:12.5px;letter-spacing:.2px;
+    border:none;border-radius:7px;padding:5px 28px 5px 12px;cursor:pointer;font-family:inherit;
+    appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='white' stroke-width='1.6' fill='none' stroke-linecap='round'/></svg>");
+    background-repeat:no-repeat;background-position:right 10px center;
+  }
+  .clazz .badge-select:focus{outline:none;box-shadow:0 0 0 3px rgba(15,42,68,.25)}
   .clazz .crow{display:grid;grid-template-columns:.85fr 1.05fr 1.05fr 1.45fr .7fr;gap:9px}
   .clazz .amt{
     text-align:right;margin-top:9px;font-size:12.5px;color:var(--navy-300);font-weight:600;
@@ -658,13 +666,37 @@ function syncCount(n){
     classData = classData.slice(0, n);
   }else{
     while(classData.length < n){
-      classData.push({grade: ($('fGrade').value || ''), main:'', sub:'', equip:'', count:20});
+      classData.push({label:`${classData.length+1}반`, grade: ($('fGrade').value || ''), main:'', sub:'', equip:'', count:20});
     }
   }
   renderClasses();
 }
 
 /* ---------- 반 렌더링 ---------- */
+function banOptions(selected){
+  let html = '', found = false;
+  for(let n=1; n<=30; n++){
+    const lab = `${n}반`;
+    if(lab===selected) found = true;
+    html += `<option value="${lab}"${lab===selected?' selected':''}>${lab}</option>`;
+  }
+  if(selected && !found){   // 직접 입력한 사용자 지정 반 이름
+    html = `<option value="${esc(selected)}" selected>${esc(selected)}</option>` + html;
+  }
+  html += `<option value="__custlabel__">＋ 직접 입력…</option>`;
+  return html;
+}
+function onClassLabelChange(i, sel){
+  setDirty();
+  if(sel.value === '__custlabel__'){
+    const v = (prompt('반 이름을 입력하세요 (예: 3반, 가반, 햇님반)') || '').trim();
+    if(v) classData[i].label = v;
+    renderClasses();
+    return;
+  }
+  classData[i].label = sel.value;
+}
+
 function equipOptions(selected){
   let html = `<option value=""${selected===''?' selected':''}>교구 선택</option>`;
   allEquipment().forEach(e=>{
@@ -683,7 +715,7 @@ function renderClasses(){
     return `
     <div class="clazz" data-i="${i}">
       <div class="chead">
-        <span class="badge">${i+1}반</span>
+        <select class="badge-select" onchange="onClassLabelChange(${i},this)">${banOptions(c.label||((i+1)+'반'))}</select>
         <button class="del-btn no-print" onclick="deleteClass(${i})">✖ 삭제</button>
       </div>
       <div class="crow">
@@ -897,7 +929,7 @@ function copyKakao(){
     const g   = c.grade ? `(${c.grade})` : '';
     const sub = c.sub.trim() ? ` / 보조 ${c.sub.trim()}` : '';
     const eq  = c.equip && c.equip!=='__custom__' ? ` · 교구 ${c.equip}` : '';
-    L.push(`${i+1}반${g} — 메인 ${c.main.trim()||'미정'}${sub}${eq}`);
+    L.push(`${c.label||((i+1)+'반')}${g} — 메인 ${c.main.trim()||'미정'}${sub}${eq}`);
   });
   L.push('');
   L.push("📌 공지를 확인하신 강사님은 톡방에 '확인' 메시지나 하트(❤️)를 남겨주세요.");
@@ -951,7 +983,7 @@ function sendToSheet(){
     grade: $('fGrade').value,
     instructors: $('fRoster').value.trim(),
     classes: classData.map((c,i)=>({
-      no:i+1, grade:c.grade||'', main:c.main.trim(), sub:c.sub.trim(),
+      no:i+1, class:c.label||((i+1)+'반'), grade:c.grade||'', main:c.main.trim(), sub:c.sub.trim(),
       equip:c.equip, count:c.count,
       amount: Math.floor(priceOf(c.equip)*(c.count||0)*1.1/10)*10
     })),
@@ -997,7 +1029,7 @@ function collectState(){
   return {
     date:$('fDate').value, region:$('fRegion').value, org:$('fOrg').value.trim(),
     grade:$('fGrade').value, roster:$('fRoster').value.trim(),
-    classes: classData.map(c=>({grade:c.grade||'', main:c.main, sub:c.sub, equip:c.equip, count:c.count})),
+    classes: classData.map((c,i)=>({label:c.label||((i+1)+'반'), grade:c.grade||'', main:c.main, sub:c.sub, equip:c.equip, count:c.count})),
     admin, prep, coaching
   };
 }
@@ -1048,8 +1080,8 @@ function loadRecord(id){
   renderTopGrade();
   $('fGrade').value = r.grade || '';
 
-  classData = (r.classes||[]).map(c=>({
-    grade:c.grade||'', main:c.main||'', sub:c.sub||'', equip:c.equip||'',
+  classData = (r.classes||[]).map((c,idx)=>({
+    label:c.label||((idx+1)+'반'), grade:c.grade||'', main:c.main||'', sub:c.sub||'', equip:c.equip||'',
     count:(c.count==null?20:c.count)
   }));
   $('fCount').value = classData.length;
