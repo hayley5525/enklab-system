@@ -31,7 +31,32 @@
     line-height:1.5;
     -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:960px;margin:0 auto;padding:24px 18px 80px}
+  .shell{max-width:1264px;margin:0 auto;padding:24px 18px 80px;display:flex;gap:18px;align-items:flex-start}
+  .wrap{flex:1;min-width:0;max-width:960px}
+
+  /* 우측 저장 목록 패널 */
+  .records{
+    width:266px;flex:none;position:sticky;top:24px;background:var(--card);
+    border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:var(--shadow);
+    max-height:calc(100vh - 48px);overflow:auto;
+  }
+  .rec-title{font-size:14px;margin:0 0 6px;color:var(--navy);font-weight:700}
+  .rec-hint{font-size:11.5px;color:var(--muted);margin:0 0 12px;line-height:1.45}
+  .rec-empty{font-size:12.5px;color:var(--muted);text-align:center;padding:20px 0}
+  #recordList{display:flex;flex-direction:column;gap:9px}
+  .rec{
+    position:relative;border:1px solid var(--line);border-radius:9px;padding:10px 30px 10px 12px;
+    cursor:pointer;background:#FBFCFD;transition:border-color .15s,box-shadow .15s;
+  }
+  .rec:hover{border-color:var(--navy);box-shadow:0 0 0 3px rgba(15,42,68,.08)}
+  .rec-date{font-size:12px;font-weight:700;color:var(--navy)}
+  .rec-org{font-size:13.5px;font-weight:700;color:var(--ink);margin:2px 0 1px}
+  .rec-grade{font-size:11.5px;color:var(--muted)}
+  .rec-del{
+    position:absolute;top:8px;right:8px;border:none;background:transparent;color:var(--muted);
+    cursor:pointer;font-size:11px;width:22px;height:22px;border-radius:6px;line-height:1;
+  }
+  .rec-del:hover{background:#FCEDEE;color:var(--warn)}
 
   /* ---------- Header ---------- */
   header.app{
@@ -102,7 +127,7 @@
     background:var(--navy);color:#fff;font-weight:700;font-size:12.5px;
     border-radius:7px;padding:4px 12px;letter-spacing:.2px;
   }
-  .clazz .crow{display:grid;grid-template-columns:1.2fr 1.2fr 1.6fr .8fr;gap:10px}
+  .clazz .crow{display:grid;grid-template-columns:.85fr 1.05fr 1.05fr 1.45fr .7fr;gap:9px}
   .clazz .amt{
     text-align:right;margin-top:9px;font-size:12.5px;color:var(--navy-300);font-weight:600;
   }
@@ -222,6 +247,11 @@
   /* ---------- Print stamp ---------- */
   .print-stamp{display:none}
 
+  @media (max-width:1000px){
+    .shell{flex-direction:column}
+    .wrap{max-width:none;width:100%}
+    .records{width:100%;position:static;max-height:none;order:2}
+  }
   @media (max-width:680px){
     .grid.g2,.grid.g3{grid-template-columns:1fr}
     .clazz .crow{grid-template-columns:1fr 1fr}
@@ -235,6 +265,8 @@
   @media print{
     @page{size:A4 portrait;margin:9mm}
     html,body{background:#fff;font-size:10px}
+    .shell{display:block;padding:0;max-width:none}
+    .records{display:none !important}
     .wrap{max-width:none;padding:0}
     header.app{
       background:#fff !important;color:var(--navy) !important;border:1px solid var(--navy);
@@ -267,7 +299,8 @@
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="shell">
+<div class="wrap main">
 
   <!-- ===== Header ===== -->
   <header class="app">
@@ -303,14 +336,8 @@
     </div>
     <div class="grid g2" style="margin-top:14px">
       <div class="field">
-        <label for="fGrade">대상 학년</label>
-        <select id="fGrade" onchange="setDirty()">
-          <option>7세</option>
-          <option>초1</option><option>초2</option><option>초3</option>
-          <option>초4</option><option>초5</option><option>초6</option>
-          <option>중1</option><option>중2</option><option>중3</option>
-          <option>고1</option><option>고2</option><option>고3</option>
-        </select>
+        <label for="fGrade">대상 학년 <span style="font-weight:400;color:var(--muted);font-size:11px">(기본/대표)</span></label>
+        <select id="fGrade" onchange="onGradeChange(this)"></select>
       </div>
       <div class="field">
         <label for="fRoster">오늘의 투입 강사 명단</label>
@@ -376,7 +403,15 @@
   </div>
 
   <div class="print-stamp" id="printStamp"></div>
-</div>
+</div><!-- /wrap.main -->
+
+<aside class="records no-print" id="recordsPanel">
+  <h3 class="rec-title">📋 저장된 출강 목록</h3>
+  <p class="rec-hint">[🔄 새로 작성하기]를 누르면 현재 작성 내용이 여기에 저장됩니다. 항목을 클릭하면 다시 불러옵니다.</p>
+  <div id="recordList"></div>
+  <div id="recordEmpty" class="rec-empty">저장된 목록이 없습니다.</div>
+</aside>
+</div><!-- /shell -->
 
 <!-- ===== Admin Modal ===== -->
 <div class="overlay" id="adminOverlay">
@@ -428,10 +463,14 @@
 const LS = {
   roster:'enklab_roster',
   equip:'enklab_equipment_v3',   // 교구 목록(단가 포함) 전체를 영구 저장
+  grades:'enklab_grades_v1',     // 대상 학년 목록
+  records:'enklab_records_v1',   // 저장된 출강 목록
   gas:'enklab_gas_url',
   pin:'enklab_pin'
 };
 const MASTER_KEY = 'ENKLAB2026';
+
+const DEFAULT_GRADES = ['7세','초1','초2','초3','초4','초5','초6','중1','중2','중3','고1','고2','고3'];
 
 /* 교구 33종 기본 목록 — 품목명·단가 모두 제공된 이미지(거래처별 제안단가, 지사가 현금가) 기준.
    사용자가 [교구 관리]에서 단가를 수정하면 그 값이 우선 적용·영구 저장됩니다. */
@@ -477,7 +516,9 @@ const PREP_ITEMS = ['교구 반별 폴리백 분류','성장 설문지 반별 30
   '압정·자석 4EA세트','강사명찰','반별 간식','코칭세트(유성매직 12색·문구세트)'];
 
 /* ---------- 상태 ---------- */
-let classData = [];          // [{main, sub, equip, count}]
+let classData = [];          // [{grade, main, sub, equip, count}]
+let GRADES = [];             // 대상 학년 목록
+let RECORDS = [];            // 저장된 출강 목록
 let hasPrinted = false;
 let isDirty = false;
 let sent = false;
@@ -502,6 +543,57 @@ function priceOf(name){
   const f = EQUIP.find(e=>e.name===name);
   return f ? (f.price||0) : 0;
 }
+
+/* ---------- 대상 학년 목록 ---------- */
+function loadGrades(){
+  try{ const s = JSON.parse(lsGet(LS.grades)); if(Array.isArray(s)&&s.length){ GRADES=s; return; } }catch(e){}
+  GRADES = DEFAULT_GRADES.slice();
+  saveGrades();
+}
+function saveGrades(){ lsSet(LS.grades, JSON.stringify(GRADES)); }
+function gradeOptions(selected){
+  let html = `<option value=""${!selected?' selected':''}>학년 선택</option>`;
+  GRADES.forEach(g=>{
+    html += `<option value="${esc(g)}"${g===selected?' selected':''}>${esc(g)}</option>`;
+  });
+  html += `<option value="__addgrade__">＋ 학년 추가…</option>`;
+  return html;
+}
+function renderTopGrade(){
+  const cur = $('fGrade').value;
+  $('fGrade').innerHTML = gradeOptions(cur);
+}
+function promptNewGrade(){
+  const g = (prompt('추가할 대상 학년을 입력하세요 (예: 6세, 유치부, 성인, 특수학급)') || '').trim();
+  if(!g) return null;
+  if(!GRADES.includes(g)){ GRADES.push(g); saveGrades(); }
+  return g;
+}
+function onGradeChange(sel){
+  setDirty();
+  if(sel.value === '__addgrade__'){
+    const g = promptNewGrade();
+    renderTopGrade();
+    renderClasses();               // 반별 학년 드롭다운에도 신규 학년 반영
+    $('fGrade').value = g || '';
+    if(g) toast('학년이 추가되었습니다');
+    return;
+  }
+}
+function onClassGradeChange(i, sel){
+  setDirty();
+  if(sel.value === '__addgrade__'){
+    const g = promptNewGrade();
+    if(g) classData[i].grade = g;
+    else  sel.value = classData[i].grade || '';
+    renderTopGrade();
+    renderClasses();
+    if(g) toast('학년이 추가되었습니다');
+    return;
+  }
+  classData[i].grade = sel.value;
+}
+
 function getPin(){ return lsGet(LS.pin) || '0000'; }
 function getGas(){ return lsGet(LS.gas) || ''; }
 
@@ -566,7 +658,7 @@ function syncCount(n){
     classData = classData.slice(0, n);
   }else{
     while(classData.length < n){
-      classData.push({main:'', sub:'', equip:'', count:20});
+      classData.push({grade: ($('fGrade').value || ''), main:'', sub:'', equip:'', count:20});
     }
   }
   renderClasses();
@@ -595,6 +687,10 @@ function renderClasses(){
         <button class="del-btn no-print" onclick="deleteClass(${i})">✖ 삭제</button>
       </div>
       <div class="crow">
+        <div class="field">
+          <label>대상 학년</label>
+          <select onchange="onClassGradeChange(${i},this)">${gradeOptions(c.grade||'')}</select>
+        </div>
         <div class="field">
           <label>메인 강사</label>
           <input type="text" list="instructorList" value="${esc(c.main)}"
@@ -798,9 +894,10 @@ function copyKakao(){
   L.push('');
   L.push('👥 반별 배정');
   classData.forEach((c,i)=>{
+    const g   = c.grade ? `(${c.grade})` : '';
     const sub = c.sub.trim() ? ` / 보조 ${c.sub.trim()}` : '';
     const eq  = c.equip && c.equip!=='__custom__' ? ` · 교구 ${c.equip}` : '';
-    L.push(`${i+1}반 — 메인 ${c.main.trim()||'미정'}${sub}${eq}`);
+    L.push(`${i+1}반${g} — 메인 ${c.main.trim()||'미정'}${sub}${eq}`);
   });
   L.push('');
   L.push("📌 공지를 확인하신 강사님은 톡방에 '확인' 메시지나 하트(❤️)를 남겨주세요.");
@@ -854,7 +951,7 @@ function sendToSheet(){
     grade: $('fGrade').value,
     instructors: $('fRoster').value.trim(),
     classes: classData.map((c,i)=>({
-      no:i+1, main:c.main.trim(), sub:c.sub.trim(),
+      no:i+1, grade:c.grade||'', main:c.main.trim(), sub:c.sub.trim(),
       equip:c.equip, count:c.count,
       amount: Math.floor(priceOf(c.equip)*(c.count||0)*1.1/10)*10
     })),
@@ -884,21 +981,124 @@ function sendToSheet(){
   });
 }
 
-/* ---------- 스마트 초기화 (명단 유지) ---------- */
+/* ---------- 저장된 출강 목록 ---------- */
+function loadRecords(){
+  try{ const s = JSON.parse(lsGet(LS.records)); RECORDS = Array.isArray(s) ? s : []; }
+  catch(e){ RECORDS = []; }
+}
+function saveRecords(){ lsSet(LS.records, JSON.stringify(RECORDS)); }
+
+function collectState(){
+  const admin=[], prep=[];
+  document.querySelectorAll('#adminChk input').forEach(cb=>admin.push(cb.checked));
+  document.querySelectorAll('#prepChk input').forEach(cb=>prep.push(cb.checked));
+  const coaching=[];
+  document.querySelectorAll('#coachWrap input:checked').forEach(cb=>coaching.push(cb.dataset.name));
+  return {
+    date:$('fDate').value, region:$('fRegion').value, org:$('fOrg').value.trim(),
+    grade:$('fGrade').value, roster:$('fRoster').value.trim(),
+    classes: classData.map(c=>({grade:c.grade||'', main:c.main, sub:c.sub, equip:c.equip, count:c.count})),
+    admin, prep, coaching
+  };
+}
+function isEmptyState(s){ return !s.date && !s.org && s.classes.length===0; }
+
+function saveCurrentRecord(){
+  const s = collectState();
+  if(isEmptyState(s)) return false;      // 빈 양식은 저장하지 않음
+  s.id = Date.now();
+  s.savedAt = nowStamp();
+  RECORDS.unshift(s);
+  if(RECORDS.length > 60) RECORDS = RECORDS.slice(0,60);
+  saveRecords();
+  renderRecords();
+  return true;
+}
+function renderRecords(){
+  const box = $('recordList');
+  $('recordEmpty').style.display = RECORDS.length ? 'none' : 'block';
+  box.innerHTML = RECORDS.map(r=>{
+    const cls = r.classes && r.classes.length ? ` · ${r.classes.length}개 반` : '';
+    return `
+    <div class="rec" onclick="loadRecord(${r.id})">
+      <button class="rec-del" title="삭제" onclick="event.stopPropagation();deleteRecord(${r.id})">✖</button>
+      <div class="rec-date">🗓 ${esc(r.date || '날짜 미정')}</div>
+      <div class="rec-org">${esc(r.org || '기관 미정')}</div>
+      <div class="rec-grade">${esc(r.grade || '학년 미정')}${cls}</div>
+    </div>`;
+  }).join('');
+}
+function loadRecord(id){
+  const r = RECORDS.find(x=>x.id===id);
+  if(!r) return;
+  if(isDirty && !confirm('현재 작성 중인 내용이 사라집니다. 저장된 목록을 불러올까요?\n(필요하면 먼저 [새로 작성하기]로 저장하세요)')) return;
+
+  // 목록에만 있는 학년이 있으면 학년 목록에 복원
+  [r.grade, ...(r.classes||[]).map(c=>c.grade)].filter(Boolean).forEach(g=>{
+    if(!GRADES.includes(g)) GRADES.push(g);
+  });
+  saveGrades();
+
+  $('fDate').value = r.date || '';
+  $('fRegion').value = r.region || '경북';
+  $('fOrg').value = r.org || '';
+  $('fRoster').value = r.roster || '';
+  lsSet(LS.roster, r.roster || '');
+  refreshDatalist();
+  renderTopGrade();
+  $('fGrade').value = r.grade || '';
+
+  classData = (r.classes||[]).map(c=>({
+    grade:c.grade||'', main:c.main||'', sub:c.sub||'', equip:c.equip||'',
+    count:(c.count==null?20:c.count)
+  }));
+  $('fCount').value = classData.length;
+  renderClasses();
+
+  const adm = document.querySelectorAll('#adminChk input');
+  (r.admin||[]).forEach((v,i)=>{ if(adm[i]) adm[i].checked = v; });
+  const pre = document.querySelectorAll('#prepChk input');
+  (r.prep||[]).forEach((v,i)=>{ if(pre[i]) pre[i].checked = v; });
+  document.querySelectorAll('#coachWrap input').forEach(cb=>{
+    cb.checked = (r.coaching||[]).includes(cb.dataset.name);
+  });
+
+  onMeta();
+  const btn=$('sendBtn'); btn.disabled=false; btn.textContent='☁️ 구글 시트로 전송'; sent=false;
+  hasPrinted=false; isDirty=false;
+  toast('저장된 목록을 불러왔습니다');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function deleteRecord(id){
+  const r = RECORDS.find(x=>x.id===id);
+  if(!confirm(`"${(r&&r.org)||'이 항목'}" 저장 목록을 삭제할까요?`)) return;
+  RECORDS = RECORDS.filter(x=>x.id!==id);
+  saveRecords();
+  renderRecords();
+}
+
+/* ---------- 스마트 초기화 (전송 후 · 강사 명단 유지) ---------- */
 function smartReset(){
-  $('fDate').value=''; $('fOrg').value=''; $('fRegion').selectedIndex=0; $('fGrade').selectedIndex=0;
+  $('fDate').value=''; $('fOrg').value=''; $('fRegion').selectedIndex=0;
+  renderTopGrade(); $('fGrade').selectedIndex=0;
   $('fCount').value=0; classData=[]; renderClasses();
   document.querySelectorAll('#adminChk input, #prepChk input').forEach(cb=>cb.checked=false);
   document.title='[ENK LAB] 출강 체크리스트';
   hasPrinted=false; isDirty=false;
 }
 
-/* ---------- 전체 새로 작성 ---------- */
-function resetAll(){
-  if(isDirty && !confirm('작성 중인 내용을 모두 지우고 새로 작성할까요?\n(강사 명단은 유지됩니다)')) return;
-  const btn=$('sendBtn'); btn.disabled=false; btn.textContent='☁️ 구글 시트로 전송'; sent=false;
+/* ---------- 전체 초기화 (강사 명단까지 비움) ---------- */
+function fullReset(){
   smartReset();
-  toast('새로 작성 준비 완료');
+  $('fRoster').value=''; lsSet(LS.roster,''); refreshDatalist();
+}
+
+/* ---------- 새로 작성하기: 현재 내용 저장 → 명단 포함 전체 초기화 ---------- */
+function resetAll(){
+  const saved = saveCurrentRecord();
+  const btn=$('sendBtn'); btn.disabled=false; btn.textContent='☁️ 구글 시트로 전송'; sent=false;
+  fullReset();
+  toast(saved ? '저장 후 새 양식으로 초기화했습니다' : '새 양식으로 초기화했습니다');
 }
 
 /* ---------- 관리자 설정 ---------- */
@@ -941,10 +1141,14 @@ window.addEventListener('beforeunload', e=>{
 /* ---------- 초기화 ---------- */
 (function init(){
   loadEquip();                 // 교구 33종 목록 로드/시드
+  loadGrades();                // 대상 학년 목록 로드/시드
+  loadRecords();               // 저장된 출강 목록 로드
   const r = lsGet(LS.roster); if(r){ $('fRoster').value = r; }  // 강사 명단 복원
   refreshDatalist();
+  renderTopGrade();
   renderChecklists();
   renderClasses();
+  renderRecords();
 })();
 </script>
 </body>
