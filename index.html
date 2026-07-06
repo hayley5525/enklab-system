@@ -137,7 +137,11 @@
     background-repeat:no-repeat;background-position:right 10px center;
   }
   .clazz .badge-select:focus{outline:none;box-shadow:0 0 0 3px rgba(15,42,68,.25)}
-  .clazz .crow{display:grid;grid-template-columns:.85fr 1.05fr 1.05fr 1.45fr .7fr;gap:9px}
+  .clazz .crow{display:grid;grid-template-columns:.95fr 1.15fr 1.15fr .7fr;gap:9px}
+  .clazz .crow2{display:grid;grid-template-columns:1.2fr 1.2fr 1.1fr;gap:9px;margin-top:9px}
+  .clazz .cchecks{display:flex;gap:20px;flex-wrap:wrap;margin-top:11px}
+  .clazz .cchecks label{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer}
+  .clazz .cchecks input{width:16px;height:16px;accent-color:var(--navy);cursor:pointer}
   .clazz .amt{
     text-align:right;margin-top:9px;font-size:12.5px;color:var(--navy-300);font-weight:600;
   }
@@ -290,6 +294,7 @@
   @media (max-width:680px){
     .grid.g2,.grid.g3{grid-template-columns:1fr}
     .clazz .crow{grid-template-columns:1fr 1fr}
+    .clazz .crow2{grid-template-columns:1fr 1fr}
     .chk-grid{grid-template-columns:1fr}
     .actions{grid-template-columns:1fr 1fr}
   }
@@ -589,6 +594,7 @@ const LS = {
   instructors:'enklab_instructors_v1', // 저장된 강사 마스터 명단(소속·이름)
   equip:'enklab_equipment_v3',   // 교구 목록(단가 포함) 전체를 영구 저장
   grades:'enklab_grades_v1',     // 대상 학년 목록
+  themes:'enklab_themes_v1',     // 반 주제 목록
   periods:'enklab_periods_v1',   // 차시 목록
   adminItems:'enklab_admin_items_v1', // 사전 행정 체크리스트 항목
   prepItems:'enklab_prep_items_v1',   // 출강 준비물 체크리스트 항목
@@ -601,6 +607,8 @@ const LS = {
 const MASTER_KEY = 'ENKLAB2026';
 
 const DEFAULT_GRADES = ['7세','초1','초2','초3','초4','초5','초6','중1','중2','중3','고1','고2','고3'];
+const DEFAULT_THEMES = ['신소재공학자','친환경자동차 연구원'];
+const SEND_OPTIONS = ['발송불필요','직접전달','택배발송','현장전달'];
 const DEFAULT_PERIODS = ['1교시','2교시','3교시','4교시','5교시','6교시'];
 const DEFAULT_COMPANIES = ['울산비전진로','한국비전진로','(주)에이블','모두행복'];
 const DEFAULT_PROGRAMS = ['ENK AI융합진로캠프','ENK 창의융합메이커','리더십캠프','진로캠프','창직캠프',
@@ -656,6 +664,7 @@ let classData = [];          // [{grade, main, sub, equip, count}]
 let INSTRUCTORS = [];        // 저장된 강사 마스터 명단
 let currentRecordId = null;  // 현재 폼이 불러온 저장 레코드 id(덮어쓰기용)
 let GRADES = [];             // 대상 학년 목록
+let THEMES = [];             // 반 주제 목록
 let PERIODS = [];            // 차시 목록
 let COMPANIES = [];          // 출강 업체 목록
 let PROGRAMS = [];           // 프로그램명 목록
@@ -733,6 +742,40 @@ function onClassGradeChange(i, sel){
     return;
   }
   classData[i].grade = sel.value;
+}
+
+/* ---------- 반 주제 · 교구발송 · 체크 ---------- */
+function loadThemes(){
+  try{ const s=JSON.parse(lsGet(LS.themes)); if(Array.isArray(s)&&s.length){ THEMES=s; return; } }catch(e){}
+  THEMES = DEFAULT_THEMES.slice(); saveThemes();
+}
+function saveThemes(){ lsSet(LS.themes, JSON.stringify(THEMES)); }
+function themeOptions(selected){
+  let html = `<option value=""${!selected?' selected':''}>주제 선택</option>`, found=false;
+  THEMES.forEach(t=>{ const s=(t===selected); if(s)found=true; html+=`<option value="${esc(t)}"${s?' selected':''}>${esc(t)}</option>`; });
+  if(selected && !found) html += `<option value="${esc(selected)}" selected>${esc(selected)}</option>`;
+  html += `<option value="__addtheme__">＋ 직접 입력…</option>`;
+  return html;
+}
+function onClassThemeChange(i, sel){
+  setDirty();
+  if(sel.value === '__addtheme__'){
+    const v = (prompt('추가할 주제를 입력하세요 (예: 신소재공학자, 친환경자동차 연구원, 로봇공학자)') || '').trim();
+    if(v){ if(!THEMES.includes(v)){ THEMES.push(v); saveThemes(); } classData[i].theme = v; }
+    renderClasses();
+    if(v) toast('주제가 추가되었습니다');
+    return;
+  }
+  classData[i].theme = sel.value;
+}
+function sendOptions(selected){
+  let html = `<option value=""${!selected?' selected':''}>발송 방식</option>`;
+  SEND_OPTIONS.forEach(v=>{ html += `<option value="${esc(v)}"${v===selected?' selected':''}>${esc(v)}</option>`; });
+  return html;
+}
+function setClassField(i, key, val){
+  setDirty();
+  classData[i][key] = val;
 }
 
 /* ---------- 출강 업체 · 프로그램명 목록 ---------- */
@@ -923,7 +966,7 @@ function syncCount(n){
     classData = classData.slice(0, n);
   }else{
     while(classData.length < n){
-      classData.push({label:`${classData.length+1}반`, grade: ($('fGrade').value || ''), main:'', sub:'', equip:'', count:20});
+      classData.push({label:`${classData.length+1}반`, grade: ($('fGrade').value || ''), main:'', sub:'', equip:'', count:20, theme:'', equipSend:'', banner:false, guide:false});
     }
   }
   renderClasses();
@@ -991,13 +1034,27 @@ function renderClasses(){
                  placeholder="이름" oninput="updClass(${i},'sub',this.value)">
         </div>
         <div class="field">
+          <label>인원수</label>
+          <input type="number" min="0" value="${c.count}" oninput="updClass(${i},'count',this.value)">
+        </div>
+      </div>
+      <div class="crow2">
+        <div class="field">
           <label>교구</label>
           <select onchange="onEquipChange(${i},this)">${equipOptions(c.equip)}</select>
         </div>
         <div class="field">
-          <label>인원수</label>
-          <input type="number" min="0" value="${c.count}" oninput="updClass(${i},'count',this.value)">
+          <label>주제</label>
+          <select onchange="onClassThemeChange(${i},this)">${themeOptions(c.theme||'')}</select>
         </div>
+        <div class="field">
+          <label>강사연구용 교구발송</label>
+          <select onchange="setClassField(${i},'equipSend',this.value)">${sendOptions(c.equipSend||'')}</select>
+        </div>
+      </div>
+      <div class="cchecks">
+        <label><input type="checkbox" ${c.banner?'checked':''} onchange="setClassField(${i},'banner',this.checked)"> 반별 현수막</label>
+        <label><input type="checkbox" ${c.guide?'checked':''} onchange="setClassField(${i},'guide',this.checked)"> 교안 발송</label>
       </div>
       <div class="amt">반 청구액(부가세 포함) <b>${won(amt)}</b></div>
     </div>`;
@@ -1260,7 +1317,9 @@ function copyKakao(){
     const g   = c.grade ? `(${c.grade})` : '';
     const sub = c.sub.trim() ? ` / 보조 ${c.sub.trim()}` : '';
     const eq  = c.equip && c.equip!=='__custom__' ? ` · 교구 ${c.equip}` : '';
-    L.push(`${c.label||((i+1)+'반')}${g} — 메인 ${c.main.trim()||'미정'}${sub}${eq}`);
+    const th  = c.theme ? ` · 주제 ${c.theme}` : '';
+    const snd = (c.equipSend && c.equipSend!=='발송불필요') ? ` · 연구교구 ${c.equipSend}` : '';
+    L.push(`${c.label||((i+1)+'반')}${g} — 메인 ${c.main.trim()||'미정'}${sub}${eq}${th}${snd}`);
   });
   L.push('');
   L.push("📌 공지를 확인하신 강사님은 톡방에 '확인' 메시지나 하트(❤️)를 남겨주세요.");
@@ -1320,7 +1379,8 @@ function sendToSheet(){
     instructors: $('fRoster').value.trim(),
     classes: classData.map((c,i)=>({
       no:i+1, class:c.label||((i+1)+'반'), grade:c.grade||'', main:c.main.trim(), sub:c.sub.trim(),
-      equip:c.equip, count:c.count,
+      equip:c.equip, count:c.count, theme:c.theme||'', equipSend:c.equipSend||'',
+      banner:!!c.banner, guide:!!c.guide,
       amount: Math.floor(priceOf(c.equip)*(c.count||0)*1.1/10)*10
     })),
     supply, vat: total-supply, total,
@@ -1366,7 +1426,7 @@ function collectState(){
     grade:$('fGrade').value, roster:$('fRoster').value.trim(),
     company:$('fCompany').value, program:$('fProgram').value,
     period:$('fPeriod').value, startTime:$('fStart').value, endTime:$('fEnd').value,
-    classes: classData.map((c,i)=>({label:c.label||((i+1)+'반'), grade:c.grade||'', main:c.main, sub:c.sub, equip:c.equip, count:c.count})),
+    classes: classData.map((c,i)=>({label:c.label||((i+1)+'반'), grade:c.grade||'', main:c.main, sub:c.sub, equip:c.equip, count:c.count, theme:c.theme||'', equipSend:c.equipSend||'', banner:!!c.banner, guide:!!c.guide})),
     admin, prep, coaching
   };
 }
@@ -1460,7 +1520,8 @@ function doLoadRecord(id){
 
   classData = (r.classes||[]).map((c,idx)=>({
     label:c.label||((idx+1)+'반'), grade:c.grade||'', main:c.main||'', sub:c.sub||'', equip:c.equip||'',
-    count:(c.count==null?20:c.count)
+    count:(c.count==null?20:c.count),
+    theme:c.theme||'', equipSend:c.equipSend||'', banner:!!c.banner, guide:!!c.guide
   }));
   $('fCount').value = classData.length;
   renderClasses();
@@ -1559,6 +1620,7 @@ window.addEventListener('beforeunload', e=>{
 (function init(){
   loadEquip();                 // 교구 33종 목록 로드/시드
   loadGrades();                // 대상 학년 목록 로드/시드
+  loadThemes();                // 반 주제 목록 로드/시드
   loadPeriods();               // 차시 목록 로드/시드
   loadChecklistItems();        // 체크리스트 항목 로드/시드
   loadCompanies();             // 출강 업체 목록 로드/시드
