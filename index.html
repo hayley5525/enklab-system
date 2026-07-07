@@ -3,1641 +3,239 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>[ENK LAB] 출강 체크리스트</title>
+<title>ENK LAB 운영관리 시스템</title>
 <style>
-  :root{
-    --navy:#0F2A44;
-    --navy-700:#1B3A5B;
-    --navy-300:#5C7B9C;
-    --line:#D9E0E8;
-    --bg:#EEF1F5;
-    --card:#FFFFFF;
-    --ink:#1A2733;
-    --muted:#6B7A8A;
-    --accent:#0F2A44;
-    --ok:#1F7A4D;
-    --warn:#B23A48;
-    --gold:#B98A2E;
-    --radius:10px;
-    --shadow:0 1px 2px rgba(15,42,68,.06),0 8px 24px rgba(15,42,68,.06);
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;padding:0}
-  body{
-    font-family:"Malgun Gothic","맑은 고딕",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-    background:var(--bg);
-    color:var(--ink);
-    font-size:14px;
-    line-height:1.5;
-    -webkit-font-smoothing:antialiased;
-  }
-  .shell{max-width:1264px;margin:0 auto;padding:24px 18px 80px;display:flex;gap:18px;align-items:flex-start}
-  .wrap{flex:1;min-width:0;max-width:960px}
-
-  /* 우측 저장 목록 패널 */
-  .records{
-    width:266px;flex:none;position:sticky;top:24px;background:var(--card);
-    border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:var(--shadow);
-    max-height:calc(100vh - 48px);overflow:auto;
-  }
-  .rec-title{font-size:14px;margin:0 0 6px;color:var(--navy);font-weight:700}
-  .rec-hint{font-size:11.5px;color:var(--muted);margin:0 0 12px;line-height:1.45}
-  .rec-empty{font-size:12.5px;color:var(--muted);text-align:center;padding:20px 0}
-  #recordList{display:flex;flex-direction:column;gap:9px}
-  .rec{
-    position:relative;border:1px solid var(--line);border-radius:9px;padding:10px 30px 10px 12px;
-    cursor:pointer;background:#FBFCFD;transition:border-color .15s,box-shadow .15s;
-  }
-  .rec:hover{border-color:var(--navy);box-shadow:0 0 0 3px rgba(15,42,68,.08)}
-  .rec-date{font-size:12px;font-weight:700;color:var(--navy)}
-  .rec-org{font-size:13.5px;font-weight:700;color:var(--ink);margin:2px 0 1px}
-  .rec-grade{font-size:11.5px;color:var(--muted)}
-  .rec-del{
-    position:absolute;top:8px;right:8px;border:none;background:transparent;color:var(--muted);
-    cursor:pointer;font-size:11px;width:22px;height:22px;border-radius:6px;line-height:1;
-  }
-  .rec-del:hover{background:#FCEDEE;color:var(--warn)}
-
-  /* ---------- Header ---------- */
-  header.app{
-    background:linear-gradient(135deg,var(--navy) 0%,var(--navy-700) 100%);
-    color:#fff;border-radius:14px;padding:22px 24px;position:relative;
-    box-shadow:var(--shadow);overflow:hidden;
-  }
-  header.app::after{
-    content:"";position:absolute;right:-40px;top:-40px;width:160px;height:160px;
-    border-radius:50%;background:rgba(255,255,255,.05);
-  }
-  .brand{display:flex;align-items:center;gap:12px}
-  .brand .logo{
-    font-weight:800;letter-spacing:.5px;font-size:13px;
-    border:1.5px solid rgba(255,255,255,.7);padding:4px 10px;border-radius:6px;white-space:nowrap;
-  }
-  .brand h1{font-size:20px;margin:0;font-weight:700;letter-spacing:-.3px}
-  .brand .sub{color:rgba(255,255,255,.72);font-size:12px;margin-top:3px}
-  .gear{
-    position:absolute;top:18px;right:18px;width:38px;height:38px;border-radius:9px;
-    background:rgba(255,255,255,.12);border:none;color:#fff;font-size:18px;cursor:pointer;
-    display:flex;align-items:center;justify-content:center;transition:background .15s;
-  }
-  .gear:hover{background:rgba(255,255,255,.22)}
-
-  /* ---------- Cards ---------- */
-  .card{
-    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-    padding:18px 20px;margin-top:18px;box-shadow:var(--shadow);
-  }
-  .card.tone-yellow{background:#FFFBEA;border-color:#F1E4B0}
-  .card.tone-green{background:#F1F8E9;border-color:#D3E7BE}
-  .card > h2{
-    font-size:14px;margin:0 0 14px;color:var(--navy);font-weight:700;letter-spacing:-.2px;
-    display:flex;align-items:center;gap:8px;
-  }
-  .card > h2 .tag{
-    font-size:11px;font-weight:600;color:var(--navy-300);
-    background:#F1F5F9;border:1px solid var(--line);padding:2px 8px;border-radius:20px;
-  }
-  .hint{font-size:12px;color:var(--muted);margin:-6px 0 12px}
-
-  /* ---------- Form grid ---------- */
-  .grid{display:grid;gap:14px}
-  .grid.g2{grid-template-columns:1fr 1fr}
-  .grid.g3{grid-template-columns:1fr 1fr 1fr}
-  .field{display:flex;flex-direction:column;gap:5px}
-  .field label{font-size:12px;font-weight:600;color:var(--navy)}
-  .req::after{content:" *";color:var(--warn)}
-  input[type=text],input[type=date],input[type=number],select,textarea{
-    width:100%;font-family:inherit;font-size:13.5px;color:var(--ink);
-    background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 11px;
-    transition:border-color .15s,box-shadow .15s;
-  }
-  input:focus,select:focus,textarea:focus{
-    outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(15,42,68,.10);
-  }
-  textarea{resize:vertical;min-height:54px}
-  select{appearance:none;-webkit-appearance:none;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%230F2A44' stroke-width='1.6' fill='none' stroke-linecap='round'/></svg>");
-    background-repeat:no-repeat;background-position:right 11px center;padding-right:30px;cursor:pointer;}
-
-  /* ---------- Class blocks ---------- */
-  #classWrap{display:flex;flex-direction:column;gap:14px}
-  .clazz{
-    border:1px solid var(--line);border-radius:10px;background:#FBFCFD;padding:14px;position:relative;
-  }
-  .clazz .chead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-  .clazz .badge{
-    background:var(--navy);color:#fff;font-weight:700;font-size:12.5px;
-    border-radius:7px;padding:4px 12px;letter-spacing:.2px;
-  }
-  .clazz .badge-select{
-    background:var(--navy);color:#fff;font-weight:700;font-size:12.5px;letter-spacing:.2px;
-    border:none;border-radius:7px;padding:5px 28px 5px 12px;cursor:pointer;font-family:inherit;
-    appearance:none;-webkit-appearance:none;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='white' stroke-width='1.6' fill='none' stroke-linecap='round'/></svg>");
-    background-repeat:no-repeat;background-position:right 10px center;
-  }
-  .clazz .badge-select:focus{outline:none;box-shadow:0 0 0 3px rgba(15,42,68,.25)}
-  .clazz .crow{display:grid;grid-template-columns:.95fr 1.15fr 1.15fr .7fr;gap:9px}
-  .clazz .crow2{display:grid;grid-template-columns:1.2fr 1.2fr 1.1fr;gap:9px;margin-top:9px}
-  .clazz .cchecks{display:flex;gap:20px;flex-wrap:wrap;margin-top:11px}
-  .clazz .cchecks label{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer}
-  .clazz .cchecks input{width:16px;height:16px;accent-color:var(--navy);cursor:pointer}
-  .clazz .amt{
-    text-align:right;margin-top:9px;font-size:12.5px;color:var(--navy-300);font-weight:600;
-  }
-  .clazz .amt b{color:var(--navy);font-weight:800}
-  .del-btn{
-    border:1px solid var(--line);background:#fff;color:var(--warn);border-radius:7px;
-    padding:5px 10px;font-size:12px;cursor:pointer;font-weight:600;
-  }
-  .del-btn:hover{background:#FCEDEE;border-color:#E7B9BE}
-
-  /* ---------- Totals ---------- */
-  .totals{
-    margin-top:16px;border-top:2px solid var(--navy);padding-top:14px;
-    display:flex;justify-content:flex-end;gap:26px;flex-wrap:wrap;align-items:baseline;
-  }
-  .totals .t{font-size:12.5px;color:var(--muted)}
-  .totals .t b{display:block;font-size:13.5px;color:var(--ink);font-weight:700;margin-top:2px}
-  .totals .grand{font-size:13px;color:var(--navy)}
-  .totals .grand b{font-size:22px;font-weight:800;color:var(--navy);margin-top:0;display:inline}
-
-  /* 금액 비표시: 반별 청구액 및 합계는 화면·인쇄 모두에서 숨김 (내부 계산·시트 전송은 유지) */
-  .clazz .amt,.totals{display:none !important}
-
-  /* ---------- Checklists ---------- */
-  .chk-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px 22px}
-  .chk{display:flex;align-items:flex-start;gap:9px;font-size:13.5px;padding:3px 0;cursor:pointer}
-  .chk input{margin-top:2px;width:17px;height:17px;accent-color:var(--navy);flex:none;cursor:pointer}
-  .chk span{user-select:none}
-  .coach-grid{display:flex;flex-wrap:wrap;gap:10px}
-  .coach-pill{
-    display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:#FBFCFD;
-    border-radius:30px;padding:6px 14px 6px 12px;font-size:13px;font-weight:600;color:var(--navy);
-  }
-  .coach-pill input{width:16px;height:16px;accent-color:var(--navy);cursor:pointer}
-  .empty-note{font-size:12.5px;color:var(--muted);font-style:normal}
-
-  /* ---------- Buttons row ---------- */
-  .actions{
-    display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-top:22px;
-  }
-  .btn{
-    border:none;border-radius:10px;padding:13px 10px;font-size:13.5px;font-weight:700;
-    cursor:pointer;font-family:inherit;transition:transform .05s,filter .15s,background .15s;
-    display:flex;align-items:center;justify-content:center;gap:7px;
-  }
-  .btn:active{transform:translateY(1px)}
-  .btn-ghost{background:#fff;border:1px solid var(--line);color:var(--navy)}
-  .btn-ghost:hover{background:#F4F7FA}
-  .btn-navy{background:var(--navy);color:#fff}
-  .btn-navy:hover{filter:brightness(1.12)}
-  .btn-gold{background:var(--gold);color:#fff}
-  .btn-gold:hover{filter:brightness(1.08)}
-  .btn:disabled{background:#C7CFD8 !important;color:#fff !important;cursor:not-allowed;filter:none}
-
-  /* ---------- Add-class control ---------- */
-  .count-ctrl{display:flex;align-items:center;gap:10px}
-  .count-ctrl input{width:90px;text-align:center}
-  .stepper{display:flex;gap:6px}
-  .stepper button{
-    width:36px;height:36px;border:1px solid var(--line);background:#fff;border-radius:8px;
-    font-size:18px;font-weight:700;color:var(--navy);cursor:pointer;line-height:1;
-  }
-  .stepper button:hover{background:#F4F7FA}
-
-  /* ---------- Modal ---------- */
-  .overlay{
-    position:fixed;inset:0;background:rgba(15,42,68,.45);display:none;
-    align-items:center;justify-content:center;z-index:60;padding:18px;
-  }
-  .overlay.on{display:flex}
-  .modal{
-    background:#fff;border-radius:14px;width:100%;max-width:440px;padding:24px;
-    box-shadow:0 24px 60px rgba(15,42,68,.35);
-  }
-  .modal h3{margin:0 0 4px;color:var(--navy);font-size:17px}
-  .modal p.lead{margin:0 0 18px;color:var(--muted);font-size:12.5px}
-  .modal .field{margin-bottom:14px}
-  .modal-actions{display:flex;gap:10px;margin-top:6px}
-  .modal-actions .btn{flex:1}
-
-  /* 교구 관리 */
-  .manage-btn{
-    margin-left:auto;border:1px solid var(--line);background:#fff;color:var(--navy);
-    border-radius:7px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;
-  }
-  .manage-btn:hover{background:#F4F7FA}
-  .modal.wide{max-width:520px}
-  #equipList{max-height:46vh;overflow:auto;border:1px solid var(--line);border-radius:9px;margin-bottom:14px}
-  .equip-row{
-    display:grid;grid-template-columns:1fr 110px auto 30px;gap:8px;align-items:center;
-    padding:8px 12px;border-bottom:1px solid var(--line);
-  }
-  .equip-row:last-child{border-bottom:none}
-  .equip-name{font-size:13px;font-weight:600;color:var(--navy)}
-  .equip-row input{padding:6px 9px;text-align:right;font-size:13px}
-  .equip-won{font-size:12px;color:var(--muted)}
-  .del-mini{
-    border:none;background:#FCEDEE;color:var(--warn);width:28px;height:28px;border-radius:7px;
-    cursor:pointer;font-size:12px;line-height:1;
-  }
-  .del-mini:hover{background:#F6D9DD}
-  .equip-add{
-    display:grid;grid-template-columns:1fr 110px auto;gap:8px;align-items:center;
-    padding-top:4px;border-top:2px dashed var(--line);margin-top:2px;padding-top:14px;
-  }
-  .equip-add input{font-size:13px}
-  /* 체크리스트 관리 */
-  #clList{max-height:46vh;overflow:auto;border:1px solid var(--line);border-radius:9px;margin-bottom:14px}
-  .cl-row{grid-template-columns:1fr 30px !important}
-  .cl-row input{text-align:left !important}
-  .cl-add{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;
-    padding-top:14px;border-top:2px dashed var(--line)}
-  .cl-add input{font-size:13px}
-  /* 강사 명단 관리 */
-  #instList{max-height:34vh;overflow:auto;border:1px solid var(--line);border-radius:9px;margin-bottom:10px}
-  .inst-row{display:grid;grid-template-columns:1fr 1fr 30px;gap:8px;align-items:center;
-    padding:7px 10px;border-bottom:1px solid var(--line)}
-  .inst-row:last-child{border-bottom:none}
-  .inst-row input{padding:6px 9px;font-size:13px}
-  .inst-empty{font-size:12.5px;color:var(--muted);text-align:center;padding:16px 0}
-  .inst-add{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center}
-  .inst-add input{font-size:13px}
-  /* 오늘의 투입 명단 선택 추가 */
-  .roster-row{display:flex;gap:8px;align-items:center}
-  .label-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
-  .label-row .manage-btn{margin-left:auto}
-  .roster-row #fRoster{flex:1}
-  .roster-pick{width:auto;min-width:118px;flex:none}
-  /* 이동 저장 확인 */
-  .leave-actions{display:flex;flex-direction:column;gap:9px;margin-top:6px}
-  .leave-actions .btn{width:100%}
-
-  /* ---------- Toast ---------- */
-  #toast{
-    position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);
-    background:var(--navy);color:#fff;padding:12px 20px;border-radius:30px;font-size:13.5px;
-    font-weight:600;box-shadow:0 10px 30px rgba(15,42,68,.35);opacity:0;pointer-events:none;
-    transition:opacity .2s,transform .2s;z-index:90;
-  }
-  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-  /* ---------- Print stamp ---------- */
-  .print-stamp{display:none}
-
-  @media (max-width:1000px){
-    .shell{flex-direction:column}
-    .wrap{max-width:none;width:100%}
-    .records{width:100%;position:static;max-height:none;order:2}
-  }
-  @media (max-width:680px){
-    .grid.g2,.grid.g3{grid-template-columns:1fr}
-    .clazz .crow{grid-template-columns:1fr 1fr}
-    .clazz .crow2{grid-template-columns:1fr 1fr}
-    .chk-grid{grid-template-columns:1fr}
-    .actions{grid-template-columns:1fr 1fr}
-  }
-
-  /* ======================================================
-     PRINT — A4 세로 1장 최적화
-  ====================================================== */
-  @media print{
-    @page{size:A4 portrait;margin:9mm}
-    html,body{background:#fff;font-size:10px}
-    .shell{display:block;padding:0;max-width:none}
-    .records{display:none !important}
-    .wrap{max-width:none;padding:0}
-    header.app{
-      background:#fff !important;color:var(--navy) !important;border:1px solid var(--navy);
-      border-radius:0;box-shadow:none;padding:8px 10px;
-    }
-    header.app::after{display:none}
-    .brand .logo{border-color:var(--navy);color:var(--navy)}
-    .brand .sub{color:var(--muted)}
-    .gear,.btn,.actions,.stepper,.del-btn,.hint,.count-ctrl .stepper,#toast,.overlay,.no-print{display:none !important}
-    .card{box-shadow:none;border:1px solid #C9D3DC;border-radius:0;margin-top:8px;padding:9px 11px;
-      page-break-inside:avoid;break-inside:avoid}
-    .card.tone-yellow,.card.tone-green{background:#fff !important}
-    .card > h2{margin-bottom:7px;font-size:11px}
-    .card > h2 .tag{display:none}
-    .clazz{background:#fff;page-break-inside:avoid;padding:8px}
-    input,select,textarea{
-      border:none !important;background:transparent !important;box-shadow:none !important;
-      padding:0 2px !important;appearance:none;-webkit-appearance:none;
-      background-image:none !important;color:#000 !important;font-weight:600;
-    }
-    select{background-image:none !important;padding-right:2px !important}
-    input[type=number]{ -moz-appearance:textfield }
-    input[type=number]::-webkit-inner-spin-button{display:none}
-    .field label{color:#000}
-    .totals{margin-top:8px;padding-top:7px}
-    .chk input,.coach-pill input{ -webkit-appearance:checkbox;appearance:auto }
-    .print-stamp{
-      display:block;text-align:right;color:var(--muted);font-size:9px;margin-top:8px;
-    }
-  }
+:root{--navy:#0F2A44;--navy2:#1B3A5B;--bg:#EEF1F5;--card:#fff;--line:#D9E0E8;--ink:#1A2733;--muted:#6B7A8A;--ok:#1F7A4D;--warn:#B23A48;--gold:#B98A2E;--blue:#2563EB;--deepgreen:#0B6B3A;--yellow:#FFF4BF;--radius:12px;--shadow:0 1px 2px rgba(15,42,68,.06),0 8px 24px rgba(15,42,68,.06)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:"Malgun Gothic","맑은 고딕",Arial,sans-serif;color:var(--ink);font-size:15px;line-height:1.45}.app-shell{display:grid;grid-template-columns:250px 1fr;min-height:100vh}.side{background:linear-gradient(180deg,var(--navy),var(--navy2));color:#fff;padding:18px 14px;position:sticky;top:0;height:100vh;overflow:auto}.brand{display:flex;gap:12px;align-items:center;border-bottom:1px solid rgba(255,255,255,.15);padding:0 4px 16px;margin-bottom:12px}.brand img{width:48px;height:48px;object-fit:contain;background:#fff;border-radius:12px;padding:5px}.brand h1{font-size:16px;line-height:1.25;margin:0;font-weight:800}.brand .sub{font-size:11.5px;color:rgba(255,255,255,.74);margin-top:4px}.nav{display:flex;flex-direction:column;gap:5px}.nav button{border:0;background:transparent;color:#fff;text-align:left;border-radius:10px;padding:10px 12px;font-weight:700;cursor:pointer;font-family:inherit}.nav button:hover,.nav button.active{background:rgba(255,255,255,.14)}.side-footer{font-size:11px;color:rgba(255,255,255,.68);margin-top:22px;padding:12px 4px;border-top:1px solid rgba(255,255,255,.15)}main{padding:22px 24px 80px;max-width:1480px;width:100%;margin:0 auto}.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.topbar h2{margin:0;color:var(--navy);font-size:22px}.top-actions{display:flex;gap:8px;flex-wrap:wrap}.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:16px}.card h3{margin:0 0 13px;color:var(--navy);font-size:16px;display:flex;gap:8px;align-items:center}.grid{display:grid;gap:12px}.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}.g6{grid-template-columns:repeat(6,minmax(0,1fr))}.field.s2{grid-column:span 2}.field.s3{grid-column:span 3}.field.s4{grid-column:span 4}.field.s6{grid-column:1/-1}.grid-sub{grid-column:1/-1;font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:5px 0 -3px;padding-left:1px}.g12{grid-template-columns:repeat(12,minmax(0,1fr))}.field.c3{grid-column:span 3}.field.c4{grid-column:span 4}.field.c6{grid-column:span 6}.field.c8{grid-column:span 8}.field.c12{grid-column:1/-1}.chk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:6px}.chk-item{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:#FBFCFD;border-radius:9px;padding:8px 11px;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer}.chk-item input{width:15px;height:15px;accent-color:var(--navy);flex:none}.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:13px;font-weight:800;color:var(--navy)}input,select,textarea{width:100%;font-family:inherit;font-size:14.5px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);padding:9px 10px}textarea{min-height:74px;resize:vertical}input:focus,select:focus,textarea:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(15,42,68,.1)}.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:800;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}.btn-navy{background:var(--navy);color:#fff}.btn-ghost{background:#fff;color:var(--navy);border:1px solid var(--line)}.btn-gold{background:var(--gold);color:#fff}.btn-red{background:var(--warn);color:#fff}.btn-green{background:var(--ok);color:#fff}.btn-blue{background:var(--blue);color:#fff}.btn:disabled{background:#C7CFD8;color:#fff;cursor:not-allowed}.mini{padding:6px 9px;font-size:12px;border-radius:8px}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px;background:#fff}table{border-collapse:collapse;width:100%;min-width:820px}th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}th{background:#F4F7FA;color:var(--navy);font-size:13px;font-weight:900}tr:last-child td{border-bottom:0}.muted{color:var(--muted);font-size:13px}.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 9px;font-size:13px;font-weight:900;border:1px solid var(--line);background:#F8FAFC}.pill.yellow{background:#FFF4BF;border-color:#EBD785;color:#7A5700}.pill.green{background:#E7F7ED;border-color:#BDE5CC;color:#116A3A}.pill.blue{background:#EAF1FF;border-color:#B9CDFD;color:#174EA6}.pill.deep{background:#DDF7E8;border-color:#93D4AD;color:#064E2F}.pill.red{background:#FCEDEE;border-color:#F1B9C0;color:#9F1239}.dash-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.dash-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:var(--shadow)}.dash-card .num{font-size:26px;font-weight:900;color:var(--navy)}.dash-card .label{font-size:13px;color:var(--muted);font-weight:800}.list{display:flex;flex-direction:column;gap:8px}.list-item{border:1px solid var(--line);background:#FBFCFD;border-radius:10px;padding:10px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.hidden{display:none!important}.section-title{font-size:13px;color:var(--navy);font-weight:900;margin:12px 0 8px}.class-row{border:1px solid var(--line);border-radius:12px;background:#FBFCFD;padding:12px;margin-bottom:10px}.class-row-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.class-row-head .badge{background:var(--navy);color:#fff;border-radius:8px;padding:5px 10px;font-weight:900}.checkline{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 16px;margin-top:10px;max-width:560px}.checkline label{display:flex;gap:6px;align-items:center;color:var(--navy);font-weight:800;font-size:13.5px}.modal-backdrop{position:fixed;inset:0;background:rgba(15,42,68,.45);display:none;align-items:center;justify-content:center;z-index:100;padding:18px}.modal-backdrop.on{display:flex}.modal{background:#fff;max-width:720px;width:100%;border-radius:16px;box-shadow:0 30px 70px rgba(0,0,0,.28);padding:22px;max-height:90vh;overflow:auto}.modal h3{margin:0 0 6px;color:var(--navy)}.modal-actions{display:flex;gap:9px;margin-top:14px;justify-content:flex-end}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.split{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}.danger-text{color:var(--warn);font-weight:900}.success-text{color:var(--ok);font-weight:900}.print-only{display:none}.addr-row{display:flex;gap:6px;align-items:center}.addr-row input,.addr-row textarea{flex:1}
+#printArea{display:none}.p-doc{font-family:inherit;color:#000}.p-head{border-bottom:2px solid #0F2A44;padding-bottom:6px;margin-bottom:8px}.p-title{font-size:16px;font-weight:900;color:#0F2A44}.p-meta{font-size:11px;color:#333;margin-top:3px}.p-sec{font-weight:900;color:#0F2A44;margin:9px 0 4px;font-size:12px;border-left:3px solid #0F2A44;padding-left:6px}.p-tbl{width:100%;border-collapse:collapse;margin-bottom:2px}.p-tbl th,.p-tbl td{border:1px solid #9aa7b4;padding:3px 5px;font-size:10.5px;text-align:left;vertical-align:top}.p-tbl th{background:#eef2f6;color:#0F2A44;font-weight:800}.p-kv{width:100%;border-collapse:collapse}.p-kv td{padding:2px 6px;font-size:11px;border-bottom:1px solid #e5e9ee}.p-kv td.k{font-weight:800;color:#0F2A44;width:96px;white-space:nowrap}.p-chk{font-size:11px;line-height:1.9}.p-chk span{display:inline-block;margin-right:16px;white-space:nowrap}.p-foot{margin-top:12px;text-align:right;font-size:9.5px;color:#666;border-top:1px solid #ccc;padding-top:5px}.mchips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px}.mchip{background:#EEF2F6;border:1px solid var(--line);border-radius:999px;padding:2px 4px 2px 10px;font-size:12px;font-weight:700;color:var(--navy);display:inline-flex;align-items:center;gap:4px}.mchip button{border:0;background:transparent;color:var(--warn);cursor:pointer;font-weight:900;font-size:12px;padding:0 2px}
+@media(max-width:1100px){.app-shell{grid-template-columns:1fr}.side{position:static;height:auto}.nav{display:grid;grid-template-columns:repeat(3,1fr)}.dash-grid,.g4,.g6,.g12{grid-template-columns:repeat(2,1fr)}.g6 .field.s2,.g6 .field.s3,.g6 .field.s4{grid-column:span 2}.g12 .field.c3,.g12 .field.c4,.g12 .field.c6,.g12 .field.c8{grid-column:auto}.split{grid-template-columns:1fr}}@media(max-width:680px){main{padding:14px}.g2,.g3,.g4,.g6,.g12,.dash-grid{grid-template-columns:1fr}.g6 .field.s2,.g6 .field.s3,.g6 .field.s4{grid-column:auto}.g12 .field.c3,.g12 .field.c4,.g12 .field.c6,.g12 .field.c8{grid-column:auto}.nav{grid-template-columns:1fr 1fr}.topbar{flex-direction:column;align-items:flex-start}}
+@media print{body{background:#fff}.side,.topbar,.no-print,.modal-backdrop{display:none!important}.app-shell{display:block}main{padding:0;max-width:none}.card{box-shadow:none;border:1px solid #C9D3DC;border-radius:0;page-break-inside:avoid}.print-only{display:block}.no-print-row{display:none!important}th{background:#fff;color:#000}input,select,textarea{border:0!important;background:transparent!important;padding:0!important}.table-wrap{border:0}.privacy{font-size:10px;color:#555;text-align:center;margin-top:10px}.print-head{display:block!important;border-bottom:2px solid #0F2A44;margin-bottom:10px;padding-bottom:6px}.print-foot{display:block!important;text-align:right;color:#666;font-size:10px;margin-top:10px}body.printing .app-shell{display:none!important}body.printing #printArea{display:block!important}@page{size:A4;margin:12mm}}
 </style>
 </head>
 <body>
-<div class="shell">
-<div class="wrap main">
-
-  <!-- ===== Header ===== -->
-  <header class="app">
-    <button class="gear no-print" onclick="openAdmin()" title="관리자 설정 (구글 시트 · PIN)">⚙️</button>
-    <div class="brand">
-      <span class="logo">ENK&nbsp;LAB</span>
-      <div>
-        <h1>출강 체크리스트</h1>
-        <div class="sub">강사 배정 · 교구 정산 · 행정 점검 자동화</div>
-      </div>
-    </div>
-  </header>
-
-  <!-- ===== 1. 기본 정보 ===== -->
-  <section class="card tone-yellow">
-    <h2>기본 정보 <span class="tag">출강 개요</span></h2>
-    <div class="grid g3">
-      <div class="field">
-        <label class="req" for="fDate">출강일</label>
-        <input type="date" id="fDate" oninput="onMeta()">
-      </div>
-      <div class="field">
-        <label for="fRegion">지역</label>
-        <select id="fRegion" onchange="setDirty()">
-          <option>경북</option><option>경남</option><option>대구</option>
-          <option>부산</option><option>울산</option>
-        </select>
-      </div>
-      <div class="field">
-        <label class="req" for="fOrg">기관명</label>
-        <input type="text" id="fOrg" placeholder="예: ○○초등학교" oninput="onMeta()">
-      </div>
-    </div>
-    <div class="grid g3" style="margin-top:14px">
-      <div class="field">
-        <label for="fPeriod">차시</label>
-        <select id="fPeriod" onchange="onPeriodChange(this)"></select>
-      </div>
-      <div class="field">
-        <label for="fStart">수업 시작시간</label>
-        <input type="time" id="fStart" oninput="setDirty()">
-      </div>
-      <div class="field">
-        <label for="fEnd">수업 종료시간</label>
-        <input type="time" id="fEnd" oninput="setDirty()">
-      </div>
-    </div>
-    <div class="grid g2" style="margin-top:14px">
-      <div class="field">
-        <label for="fGrade">대상 학년 <span style="font-weight:400;color:var(--muted);font-size:11px">(기본/대표)</span></label>
-        <select id="fGrade" onchange="onGradeChange(this)"></select>
-      </div>
-      <div class="field">
-        <label for="fRoster" class="label-row">
-          <span>오늘의 투입 강사 명단</span>
-          <button type="button" class="manage-btn no-print" onclick="openInstructorManager()">👥 강사 저장·관리</button>
-        </label>
-        <div class="roster-row">
-          <input type="text" id="fRoster" placeholder="콤마로 구분 · 예: 김유니, 박코딩, 이메이커" oninput="onRoster()">
-          <select id="fInstructorPick" class="roster-pick no-print" onchange="pickInstructor(this)" title="저장된 강사에서 추가"></select>
-        </div>
-      </div>
-    </div>
-    <p class="hint" style="margin-top:10px">※ 강사 명단은 자동 저장되어 다음 실행 시에도 유지되며, 반별 강사 입력 시 자동완성으로 추천됩니다. [👥 강사 저장·관리]로 강사를 등록하면 우측 [＋ 저장된 강사]에서 골라 추가할 수 있습니다.</p>
-  </section>
-
-  <!-- ===== 1-2. 출강 업체 · 프로그램 ===== -->
-  <section class="card tone-green">
-    <h2>출강 업체 · 프로그램 <span class="tag">선택 · 직접 추가</span></h2>
-    <div class="grid g2">
-      <div class="field">
-        <label for="fCompany">출강 업체</label>
-        <select id="fCompany" onchange="onCompanyChange(this)"></select>
-      </div>
-      <div class="field">
-        <label for="fProgram">프로그램명</label>
-        <select id="fProgram" onchange="onProgramChange(this)"></select>
-      </div>
-    </div>
-    <p class="hint" style="margin-top:10px">※ 목록 맨 아래 [＋ 직접 입력…]으로 업체·프로그램을 추가하면 다음 실행에도 유지됩니다.</p>
-  </section>
-
-  <!-- ===== 2. 반 구성 ===== -->
-  <section class="card">
-    <h2>반 구성 · 교구 배정 <span class="tag">동적 생성</span>
-      <button class="manage-btn no-print" onclick="openEquipManager()">🧰 교구 관리</button>
-    </h2>
-    <div class="count-ctrl no-print">
-      <label class="field" style="gap:5px"><span style="font-size:12px;font-weight:600;color:var(--navy)">반 개수</span>
-        <span style="display:flex;gap:8px;align-items:center">
-          <span class="stepper">
-            <button type="button" onclick="bumpCount(-1)" title="감소">−</button>
-          </span>
-          <input type="number" id="fCount" min="0" max="50" value="0" oninput="onCountInput()">
-          <span class="stepper">
-            <button type="button" onclick="bumpCount(1)" title="추가">+</button>
-          </span>
-        </span>
-      </label>
-    </div>
-    <div id="classWrap" style="margin-top:14px"></div>
-    <div id="classEmpty" class="empty-note" style="margin-top:6px">반 개수를 입력하면 반별 입력 칸이 생성됩니다.</div>
-
-    <div class="totals">
-      <span class="t">공급가액<b id="tSupply">0원</b></span>
-      <span class="t">부가세 (10%)<b id="tVat">0원</b></span>
-      <span class="grand">총 청구 합계 <b id="tTotal">0원</b></span>
-    </div>
-  </section>
-
-  <!-- ===== 3. 사전 행정 체크리스트 ===== -->
-  <section class="card">
-    <h2>사전 행정 체크리스트 <span class="tag">추가 · 수정</span>
-      <button class="manage-btn no-print" onclick="openChecklistManager('admin')">📝 항목 관리</button>
-    </h2>
-    <div class="chk-grid" id="adminChk"></div>
-  </section>
-
-  <!-- ===== 4. 출강 준비물 체크리스트 ===== -->
-  <section class="card">
-    <h2>출강 준비물 체크리스트 <span class="tag">추가 · 수정</span>
-      <button class="manage-btn no-print" onclick="openChecklistManager('prep')">📝 항목 관리</button>
-    </h2>
-    <div class="chk-grid" id="prepChk"></div>
-  </section>
-
-  <!-- ===== 5. 코칭세트 대여 ===== -->
-  <section class="card">
-    <h2>코칭세트 대여 확인 <span class="tag">메인 강사 자동 추출</span></h2>
-    <div class="coach-grid" id="coachWrap"></div>
-    <div id="coachEmpty" class="empty-note">반별 메인 강사를 입력하면 대여 확인 목록이 자동 생성됩니다.</div>
-  </section>
-
-  <!-- ===== 6. Actions ===== -->
-  <div class="actions no-print">
-    <button class="btn btn-ghost" onclick="resetAll()">🔄 새로 작성하기</button>
-    <button class="btn btn-ghost" onclick="copyKakao()">💬 카톡 공지 복사</button>
-    <button class="btn btn-navy" onclick="doPrint()">🖨️ 인쇄 / PDF 저장</button>
-    <button class="btn btn-gold" id="sendBtn" onclick="sendToSheet()">☁️ 구글 시트로 전송</button>
-  </div>
-
-  <div class="print-stamp" id="printStamp"></div>
-</div><!-- /wrap.main -->
-
-<aside class="records no-print" id="recordsPanel">
-  <h3 class="rec-title">📋 저장된 출강 목록</h3>
-  <p class="rec-hint">[🔄 새로 작성하기]를 누르면 현재 작성 내용이 여기에 저장됩니다. 항목을 클릭하면 다시 불러옵니다.</p>
-  <div id="recordList"></div>
-  <div id="recordEmpty" class="rec-empty">저장된 목록이 없습니다.</div>
+<div class="app-shell">
+<aside class="side no-print">
+  <div class="brand"><div><h1>ENK LAB<br>운영관리 시스템</h1><div class="sub">출강관리 · 교구물류 · 재고관리 · 강사관리</div></div></div>
+  <div class="nav" id="nav"></div>
+  <div class="side-footer">Version 1.1.0<br>© ENK LAB<br><br>기존 출강 체크리스트 데이터를 보존하면서 확장된 단일 파일 시스템입니다.</div>
 </aside>
-</div><!-- /shell -->
-
-<!-- ===== Admin Modal ===== -->
-<div class="overlay" id="adminOverlay">
-  <div class="modal">
-    <h3>관리자 설정</h3>
-    <p class="lead">구글 시트 전송 주소와 PIN 번호를 관리합니다.</p>
-
-    <div class="field">
-      <label for="mGas">Google Apps Script URL</label>
-      <input type="text" id="mGas" placeholder="https://script.google.com/macros/s/.../exec">
-    </div>
-    <div class="field">
-      <label for="mPin">새 PIN 번호 (변경 시에만 입력)</label>
-      <input type="text" id="mPin" inputmode="numeric" maxlength="8" placeholder="비워두면 기존 PIN 유지">
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeAdmin()">닫기</button>
-      <button class="btn btn-navy" onclick="saveAdmin()">저장</button>
-    </div>
-  </div>
+<main>
+  <div class="topbar no-print"><h2 id="viewTitle">대시보드</h2><div class="top-actions" id="topActions"></div></div>
+  <div id="app"></div>
+</main>
 </div>
-
-<!-- ===== 이동 저장 확인 Modal ===== -->
-<div class="overlay" id="leaveOverlay">
-  <div class="modal">
-    <h3>저장하시겠습니까?</h3>
-    <p class="lead" id="leaveMsg">작성 중인 내용이 아직 저장되지 않았습니다.</p>
-    <div class="leave-actions">
-      <button class="btn btn-navy" onclick="leaveSaveAndGo()">💾 저장하고 이동</button>
-      <button class="btn btn-ghost" onclick="leaveDiscardAndGo()">저장 안 하고 이동</button>
-      <button class="btn btn-ghost" onclick="leaveCancel()">취소</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===== 강사 명단 관리 Modal ===== -->
-<div class="overlay" id="instOverlay">
-  <div class="modal wide">
-    <h3>강사 명단 관리</h3>
-    <p class="lead">소속·이름으로 강사를 저장합니다. 기존 강사는 그 자리에서 수정하거나 ✖로 삭제할 수 있습니다. 저장된 강사는 브라우저에 영구 보관됩니다.</p>
-    <div id="instList"></div>
-    <div class="inst-add">
-      <input type="text" id="newInstOrg" placeholder="소속">
-      <input type="text" id="newInstName" placeholder="이름">
-      <button class="btn btn-navy" style="padding:9px 14px" onclick="addInstructor()">＋ 추가</button>
-    </div>
-    <p class="hint" style="margin:8px 0 0">※ 저장한 강사는 [오늘의 투입 강사 명단] 옆 [＋ 저장된 강사]에서 선택해 추가할 수 있습니다.</p>
-    <div class="modal-actions" style="margin-top:16px">
-      <button class="btn btn-navy" onclick="closeInstructorManager()">완료</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===== 교구 관리 Modal ===== -->
-<div class="overlay" id="equipOverlay">
-  <div class="modal wide">
-    <h3>교구 관리</h3>
-    <p class="lead">단가를 입력·수정하거나 새 교구를 추가합니다. 변경 사항은 자동 저장되어 다음 실행에도 유지됩니다.</p>
-    <div id="equipList"></div>
-    <div class="equip-add">
-      <input type="text" id="newEquipName" placeholder="새 교구명">
-      <input type="number" id="newEquipPrice" min="0" step="100" placeholder="단가">
-      <button class="btn btn-navy" style="padding:9px 16px" onclick="addEquipFromForm()">＋ 추가</button>
-    </div>
-    <div class="modal-actions" style="margin-top:16px">
-      <button class="btn btn-navy" onclick="closeEquipManager()">완료</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===== 체크리스트 항목 관리 Modal ===== -->
-<div class="overlay" id="clOverlay">
-  <div class="modal wide">
-    <h3 id="clMgrTitle">체크리스트 관리</h3>
-    <p class="lead">기존 항목을 수정·삭제하거나 새 항목을 추가합니다. 변경 사항은 자동 저장되어 다음 실행에도 유지됩니다.</p>
-    <div id="clList"></div>
-    <div class="cl-add">
-      <input type="text" id="clNewName" placeholder="새 체크 항목">
-      <button class="btn btn-navy" style="padding:9px 16px" onclick="addClItem()">＋ 추가</button>
-    </div>
-    <div class="modal-actions" style="margin-top:16px">
-      <button class="btn btn-navy" onclick="closeChecklistManager()">완료</button>
-    </div>
-  </div>
-</div>
-
-<datalist id="instructorList"></datalist>
-<div id="toast"></div>
-
+<div class="modal-backdrop" id="modal"><div class="modal" id="modalBody"></div></div>
+<div id="toast" style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#0F2A44;color:#fff;padding:11px 18px;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:.2s;z-index:200;font-weight:800"></div>
+<datalist id="teacherList"></datalist><datalist id="orgList"></datalist>
+<div id="printArea"></div>
 <script>
 "use strict";
-/* ============================================================
-   ENK LAB 출강 체크리스트 — Vanilla JS (단일 파일 / 로컬 file:// 대응)
-============================================================ */
-
-/* ---------- 상수 ---------- */
-const LS = {
-  roster:'enklab_roster',
-  instructors:'enklab_instructors_v1', // 저장된 강사 마스터 명단(소속·이름)
-  equip:'enklab_equipment_v3',   // 교구 목록(단가 포함) 전체를 영구 저장
-  grades:'enklab_grades_v1',     // 대상 학년 목록
-  themes:'enklab_themes_v1',     // 반 주제 목록
-  periods:'enklab_periods_v1',   // 차시 목록
-  adminItems:'enklab_admin_items_v1', // 사전 행정 체크리스트 항목
-  prepItems:'enklab_prep_items_v1',   // 출강 준비물 체크리스트 항목
-  companies:'enklab_companies_v1', // 출강 업체 목록
-  programs:'enklab_programs_v1',  // 프로그램명 목록
-  records:'enklab_records_v1',   // 저장된 출강 목록
-  gas:'enklab_gas_url',
-  pin:'enklab_pin'
+const VERSION = "1.1.0";
+const STORE_KEY = "enklab_ops_v1";
+const LEGACY_DONE_KEY = "enklab_ops_migrated_v1";
+const LEGACY_KEYS = {
+  roster:'enklab_roster', instructors:'enklab_instructors_v1', equip:'enklab_equipment_v3', grades:'enklab_grades_v1', themes:'enklab_themes_v1', periods:'enklab_periods_v1', adminItems:'enklab_admin_items_v1', prepItems:'enklab_prep_items_v1', companies:'enklab_companies_v1', programs:'enklab_programs_v1', records:'enklab_records_v1', gas:'enklab_gas_url', pin:'enklab_pin'
 };
-const MASTER_KEY = 'ENKLAB2026';
-
 const DEFAULT_GRADES = ['7세','초1','초2','초3','초4','초5','초6','중1','중2','중3','고1','고2','고3'];
 const DEFAULT_THEMES = ['신소재공학자','친환경자동차 연구원'];
-const SEND_OPTIONS = ['발송불필요','직접전달','택배발송','현장전달'];
 const DEFAULT_PERIODS = ['1교시','2교시','3교시','4교시','5교시','6교시'];
-const DEFAULT_COMPANIES = ['울산비전진로','한국비전진로','(주)에이블','모두행복'];
-const DEFAULT_PROGRAMS = ['ENK AI융합진로캠프','ENK 창의융합메이커','리더십캠프','진로캠프','창직캠프',
-  'ENK AI로봇코딩캠프','ENK 창의로봇캠프','ENK 자율주행캠프'];
-
-/* 교구 33종 기본 목록 — 품목명·단가 모두 제공된 이미지(거래처별 제안단가, 지사가 현금가) 기준.
-   사용자가 [교구 관리]에서 단가를 수정하면 그 값이 우선 적용·영구 저장됩니다. */
+const DEFAULT_COMPANIES = ['ENK LAB 본부','울산비전진로','한국비전진로','(주)에이블','모두행복'];
+const DEFAULT_PROGRAMS = ['ENK AI융합진로캠프','ENK 창의융합메이커','리더십캠프','진로캠프','창직캠프','ENK AI로봇코딩캠프','ENK 창의로봇캠프','ENK 자율주행캠프'];
+const SEND_OPTIONS = ['발송불필요','직접전달','택배발송','현장전달'];
+const COURIERS = ['우체국','CJ대한통운','롯데택배','한진택배','로젠택배','직접입력','직접전달','현장전달'];
+const SHIP_STATUS = ['미발송','발송완료','배송완료','수령확인'];
+const RETURN_STATUS = ['반납예정','반납완료','미반납','분실','파손반납'];
+const BAD_REASONS = ['파손','작동불량','부품누락','분실','기타'];
 const DEFAULT_EQUIPMENT = [
-  {name:'전동비행기[반조립]', price:6500},
-  {name:'풍력자동차',        price:4500},
-  {name:'에어로켓',          price:5000},
-  {name:'스네이크로봇',       price:5000},
-  {name:'엑스자이로',        price:5000},
-  {name:'플라잉옥타곤',       price:9000},
-  {name:'LED구름조명',       price:3000},
-  {name:'LED스크래치조명',    price:2500},
-  {name:'LED슬라임전구',      price:4000},
-  {name:'로켓런처[반조립]',   price:8500},
-  {name:'배트맨카',          price:5500},
-  {name:'LED메세지팬',       price:7500},
-  {name:'3연발밴드건',       price:2500},
-  {name:'KF-21 보라매',      price:7500},
-  {name:'레이저쇼프로젝터',    price:9000},
-  {name:'UV박스',           price:5500},
-  {name:'가상시뮬레이터',     price:4500},
-  {name:'슈팅디스크[반조립]', price:4500},
-  {name:'트리데코라이트',     price:4000},
-  {name:'LED스피너탑',       price:4000},
-  {name:'블루투스스피커',     price:9000},
-  {name:'로프건',           price:7500},
-  {name:'스탄카',           price:4000},
-  {name:'스텝봇',           price:9000},
-  {name:'축구로봇',          price:14000},
-  {name:'손풍기',           price:2700},
-  {name:'파이팅이글',        price:4000},
-  {name:'라이팅스타',        price:5000},
-  {name:'하이브리드듀얼카',    price:8000},
-  {name:'3차원측정자',       price:2000},
-  {name:'스마트스탠드',       price:2500},
-  {name:'스카이플랩버드',     price:11000},
-  {name:'홀로그램',          price:1500}
+{name:'전동비행기[반조립]',price:6500},{name:'풍력자동차',price:4500},{name:'에어로켓',price:5000},{name:'스네이크로봇',price:5000},{name:'엑스자이로',price:5000},{name:'플라잉옥타곤',price:9000},{name:'LED구름조명',price:3000},{name:'LED스크래치조명',price:2500},{name:'LED슬라임전구',price:4000},{name:'로켓런처[반조립]',price:8500},{name:'배트맨카',price:5500},{name:'LED메세지팬',price:7500},{name:'3연발밴드건',price:2500},{name:'KF-21 보라매',price:7500},{name:'레이저쇼프로젝터',price:9000},{name:'UV박스',price:5500},{name:'가상시뮬레이터',price:4500},{name:'슈팅디스크[반조립]',price:4500},{name:'트리데코라이트',price:4000},{name:'LED스피너탑',price:4000},{name:'블루투스스피커',price:9000},{name:'로프건',price:7500},{name:'스탄카',price:4000},{name:'스텝봇',price:9000},{name:'축구로봇',price:14000},{name:'손풍기',price:2700},{name:'파이팅이글',price:4000},{name:'라이팅스타',price:5000},{name:'하이브리드듀얼카',price:8000},{name:'3차원측정자',price:2000},{name:'스마트스탠드',price:2500},{name:'스카이플랩버드',price:11000},{name:'홀로그램',price:1500}
 ];
-
-const DEFAULT_ADMIN_ITEMS = ['견적서','통장사본','사업자등록증','제안서','강의계획서',
-  '성범죄동의서','강사카드','계약이행통합서약서','강사단톡방 개설','강사섭외 공지'];
-const DEFAULT_PREP_ITEMS = ['교구 반별 폴리백 분류','성장 설문지 반별 30장 인쇄','현수막 반별 챙김',
-  '압정·자석 4EA세트','강사명찰','반별 간식','코칭세트(유성매직 12색·문구세트)'];
-let ADMIN_ITEMS = [];        // 사전 행정 체크리스트 항목(편집 가능)
-let PREP_ITEMS = [];         // 출강 준비물 체크리스트 항목(편집 가능)
-
-/* ---------- 상태 ---------- */
-let classData = [];          // [{grade, main, sub, equip, count}]
-let INSTRUCTORS = [];        // 저장된 강사 마스터 명단
-let currentRecordId = null;  // 현재 폼이 불러온 저장 레코드 id(덮어쓰기용)
-let GRADES = [];             // 대상 학년 목록
-let THEMES = [];             // 반 주제 목록
-let PERIODS = [];            // 차시 목록
-let COMPANIES = [];          // 출강 업체 목록
-let PROGRAMS = [];           // 프로그램명 목록
-let RECORDS = [];            // 저장된 출강 목록
-let hasPrinted = false;
-let isDirty = false;
-let sent = false;
-
-/* ---------- localStorage 안전 래퍼 ---------- */
-function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
-function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
-
-/* ---------- 교구 working list (전체 목록을 영구 저장) ---------- */
-let EQUIP = [];
-function loadEquip(){
-  try{
-    const s = JSON.parse(lsGet(LS.equip));
-    if(Array.isArray(s) && s.length){ EQUIP = s; return; }
-  }catch(e){}
-  EQUIP = DEFAULT_EQUIPMENT.map(e=>({name:e.name, price:e.price}));
-  saveEquip();
-}
-function saveEquip(){ lsSet(LS.equip, JSON.stringify(EQUIP)); }
-function allEquipment(){ return EQUIP; }
-function priceOf(name){
-  const f = EQUIP.find(e=>e.name===name);
-  return f ? (f.price||0) : 0;
-}
-
-/* ---------- 대상 학년 목록 ---------- */
-function loadGrades(){
-  try{ const s = JSON.parse(lsGet(LS.grades)); if(Array.isArray(s)&&s.length){ GRADES=s; return; } }catch(e){}
-  GRADES = DEFAULT_GRADES.slice();
-  saveGrades();
-}
-function saveGrades(){ lsSet(LS.grades, JSON.stringify(GRADES)); }
-function gradeOptions(selected){
-  let html = `<option value=""${!selected?' selected':''}>학년 선택</option>`;
-  GRADES.forEach(g=>{
-    html += `<option value="${esc(g)}"${g===selected?' selected':''}>${esc(g)}</option>`;
-  });
-  html += `<option value="__addgrade__">＋ 학년 추가…</option>`;
-  return html;
-}
-function renderTopGrade(){
-  const cur = $('fGrade').value;
-  $('fGrade').innerHTML = gradeOptions(cur);
-}
-function promptNewGrade(){
-  const g = (prompt('추가할 대상 학년을 입력하세요 (예: 6세, 유치부, 성인, 특수학급)') || '').trim();
-  if(!g) return null;
-  if(!GRADES.includes(g)){ GRADES.push(g); saveGrades(); }
-  return g;
-}
-function onGradeChange(sel){
-  setDirty();
-  if(sel.value === '__addgrade__'){
-    const g = promptNewGrade();
-    renderTopGrade();
-    renderClasses();               // 반별 학년 드롭다운에도 신규 학년 반영
-    $('fGrade').value = g || '';
-    if(g) toast('학년이 추가되었습니다');
-    return;
-  }
-}
-function onClassGradeChange(i, sel){
-  setDirty();
-  if(sel.value === '__addgrade__'){
-    const g = promptNewGrade();
-    if(g) classData[i].grade = g;
-    else  sel.value = classData[i].grade || '';
-    renderTopGrade();
-    renderClasses();
-    if(g) toast('학년이 추가되었습니다');
-    return;
-  }
-  classData[i].grade = sel.value;
-}
-
-/* ---------- 반 주제 · 교구발송 · 체크 ---------- */
-function loadThemes(){
-  try{ const s=JSON.parse(lsGet(LS.themes)); if(Array.isArray(s)&&s.length){ THEMES=s; return; } }catch(e){}
-  THEMES = DEFAULT_THEMES.slice(); saveThemes();
-}
-function saveThemes(){ lsSet(LS.themes, JSON.stringify(THEMES)); }
-function themeOptions(selected){
-  let html = `<option value=""${!selected?' selected':''}>주제 선택</option>`, found=false;
-  THEMES.forEach(t=>{ const s=(t===selected); if(s)found=true; html+=`<option value="${esc(t)}"${s?' selected':''}>${esc(t)}</option>`; });
-  if(selected && !found) html += `<option value="${esc(selected)}" selected>${esc(selected)}</option>`;
-  html += `<option value="__addtheme__">＋ 직접 입력…</option>`;
-  return html;
-}
-function onClassThemeChange(i, sel){
-  setDirty();
-  if(sel.value === '__addtheme__'){
-    const v = (prompt('추가할 주제를 입력하세요 (예: 신소재공학자, 친환경자동차 연구원, 로봇공학자)') || '').trim();
-    if(v){ if(!THEMES.includes(v)){ THEMES.push(v); saveThemes(); } classData[i].theme = v; }
-    renderClasses();
-    if(v) toast('주제가 추가되었습니다');
-    return;
-  }
-  classData[i].theme = sel.value;
-}
-function sendOptions(selected){
-  let html = `<option value=""${!selected?' selected':''}>발송 방식</option>`;
-  SEND_OPTIONS.forEach(v=>{ html += `<option value="${esc(v)}"${v===selected?' selected':''}>${esc(v)}</option>`; });
-  return html;
-}
-function setClassField(i, key, val){
-  setDirty();
-  classData[i][key] = val;
-}
-
-/* ---------- 출강 업체 · 프로그램명 목록 ---------- */
-function optionList(items, selected, token){
-  let html = `<option value=""${!selected?' selected':''}>선택하세요</option>`, found=false;
-  items.forEach(v=>{ const s=(v===selected); if(s)found=true; html+=`<option value="${esc(v)}"${s?' selected':''}>${esc(v)}</option>`; });
-  if(selected && !found) html += `<option value="${esc(selected)}" selected>${esc(selected)}</option>`;
-  html += `<option value="${token}">＋ 직접 입력…</option>`;
-  return html;
-}
-function loadPeriods(){ try{const s=JSON.parse(lsGet(LS.periods)); if(Array.isArray(s)&&s.length){PERIODS=s;return;}}catch(e){} PERIODS=DEFAULT_PERIODS.slice(); savePeriods(); }
-function savePeriods(){ lsSet(LS.periods, JSON.stringify(PERIODS)); }
-function renderPeriodSelect(){ $('fPeriod').innerHTML = optionList(PERIODS, $('fPeriod').value, '__addperiod__'); }
-function onPeriodChange(sel){
-  setDirty();
-  if(sel.value === '__addperiod__'){
-    const v = (prompt('추가할 차시를 입력하세요 (예: 7교시, 1~2교시, 전일)') || '').trim();
-    if(v && !PERIODS.includes(v)){ PERIODS.push(v); savePeriods(); }
-    renderPeriodSelect(); $('fPeriod').value = v || '';
-    if(v) toast('차시가 추가되었습니다');
-    return;
-  }
-}
-function loadCompanies(){ try{const s=JSON.parse(lsGet(LS.companies)); if(Array.isArray(s)&&s.length){COMPANIES=s;return;}}catch(e){} COMPANIES=DEFAULT_COMPANIES.slice(); saveCompanies(); }
-function saveCompanies(){ lsSet(LS.companies, JSON.stringify(COMPANIES)); }
-function loadPrograms(){ try{const s=JSON.parse(lsGet(LS.programs)); if(Array.isArray(s)&&s.length){PROGRAMS=s;return;}}catch(e){} PROGRAMS=DEFAULT_PROGRAMS.slice(); savePrograms(); }
-function savePrograms(){ lsSet(LS.programs, JSON.stringify(PROGRAMS)); }
-function renderCompanySelect(){ $('fCompany').innerHTML = optionList(COMPANIES, $('fCompany').value, '__addcompany__'); }
-function renderProgramSelect(){ $('fProgram').innerHTML = optionList(PROGRAMS, $('fProgram').value, '__addprogram__'); }
-function onCompanyChange(sel){
-  setDirty();
-  if(sel.value === '__addcompany__'){
-    const v = (prompt('추가할 출강 업체명을 입력하세요') || '').trim();
-    if(v && !COMPANIES.includes(v)){ COMPANIES.push(v); saveCompanies(); }
-    renderCompanySelect(); $('fCompany').value = v || '';
-    if(v) toast('출강 업체가 추가되었습니다');
-    return;
-  }
-}
-function onProgramChange(sel){
-  setDirty();
-  if(sel.value === '__addprogram__'){
-    const v = (prompt('추가할 프로그램명을 입력하세요') || '').trim();
-    if(v && !PROGRAMS.includes(v)){ PROGRAMS.push(v); savePrograms(); }
-    renderProgramSelect(); $('fProgram').value = v || '';
-    if(v) toast('프로그램이 추가되었습니다');
-    return;
-  }
-}
-
-function getPin(){ return lsGet(LS.pin) || '0000'; }
-function getGas(){ return lsGet(LS.gas) || ''; }
-
-/* ---------- 유틸 ---------- */
-function won(n){ return Number(n).toLocaleString('ko-KR') + '원'; }
-function setDirty(){ isDirty = true; }
-function $(id){ return document.getElementById(id); }
-
-function toast(msg){
-  const t = $('toast'); t.textContent = msg; t.classList.add('show');
-  clearTimeout(t._tid); t._tid = setTimeout(()=>t.classList.remove('show'), 2200);
-}
-function nowStamp(){
-  const d = new Date(), p = n => String(n).padStart(2,'0');
-  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
-}
-
-/* ---------- 메타: 제목 자동 변경 ---------- */
-function onMeta(){
-  setDirty();
-  const date = $('fDate').value;
-  const org  = $('fOrg').value.trim();
-  if(date && org){
-    document.title = `[ENK LAB] ${date}_${org}_출강체크리스트`;
-  }else{
-    document.title = '[ENK LAB] 출강 체크리스트';
-  }
-}
-
-/* ---------- 강사 명단 / 자동완성 ---------- */
-function rosterNames(){
-  return $('fRoster').value.split(',').map(s=>s.trim()).filter(Boolean);
-}
-function refreshDatalist(){
-  const dl = $('instructorList');
-  dl.innerHTML = rosterNames().map(n=>`<option value="${esc(n)}">`).join('');
-}
-function onRoster(){
-  setDirty();
-  lsSet(LS.roster, $('fRoster').value);
-  refreshDatalist();
-}
-
-/* ---------- 저장된 강사 마스터 명단 (소속·이름) ---------- */
-function loadInstructors(){
-  try{ const s=JSON.parse(lsGet(LS.instructors)); INSTRUCTORS = Array.isArray(s)?s:[]; }
-  catch(e){ INSTRUCTORS = []; }
-}
-function saveInstructors(){ lsSet(LS.instructors, JSON.stringify(INSTRUCTORS)); }
-
-/* 오늘의 투입 명단 옆 '저장된 강사에서 추가' 드롭다운 */
-function renderInstructorPicker(){
-  const sel = $('fInstructorPick');
-  if(!sel) return;
-  let html = `<option value="">＋ 저장된 강사</option>`;
-  INSTRUCTORS.forEach(it=>{
-    const label = it.org ? `${it.name} (${it.org})` : it.name;
-    html += `<option value="${it.id}">${esc(label)}</option>`;
-  });
-  sel.innerHTML = html;
-}
-function pickInstructor(sel){
-  const it = INSTRUCTORS.find(x=>String(x.id)===String(sel.value));
-  sel.selectedIndex = 0;
-  if(!it) return;
-  const names = rosterNames();
-  if(names.includes(it.name)){ toast('이미 명단에 있습니다'); return; }
-  names.push(it.name);
-  $('fRoster').value = names.join(', ');
-  onRoster();
-  toast(`${it.name} 추가`);
-}
-
-/* 관리자 모달 내 강사 명단 편집 */
-function renderInstructorList(){
-  const box = $('instList');
-  if(!box) return;
-  box.innerHTML = INSTRUCTORS.length
-    ? INSTRUCTORS.map((it,idx)=>`
-      <div class="inst-row">
-        <input type="text" value="${esc(it.org||'')}" placeholder="소속" oninput="editInstructor(${idx},'org',this.value)">
-        <input type="text" value="${esc(it.name||'')}" placeholder="이름" oninput="editInstructor(${idx},'name',this.value)">
-        <button class="del-mini" title="삭제" onclick="removeInstructor(${idx})">✖</button>
-      </div>`).join('')
-    : `<div class="inst-empty">저장된 강사가 없습니다.</div>`;
-}
-function editInstructor(idx, field, val){
-  INSTRUCTORS[idx][field] = val;
-  saveInstructors();
-  renderInstructorPicker();
-}
-function removeInstructor(idx){
-  if(!confirm(`"${INSTRUCTORS[idx].name||'이 강사'}"를 저장 명단에서 삭제할까요?`)) return;
-  INSTRUCTORS.splice(idx,1);
-  saveInstructors(); renderInstructorList(); renderInstructorPicker();
-}
-function addInstructor(){
-  const org = $('newInstOrg').value.trim();
-  const name = $('newInstName').value.trim();
-  if(!name){ toast('이름을 입력하세요'); $('newInstName').focus(); return; }
-  if(INSTRUCTORS.some(x=>x.name===name && (x.org||'')===org)){ toast('이미 등록된 강사입니다'); return; }
-  INSTRUCTORS.push({id:Date.now(), org, name});
-  saveInstructors();
-  $('newInstOrg').value=''; $('newInstName').value='';
-  renderInstructorList(); renderInstructorPicker(); $('newInstOrg').focus();
-  toast('강사가 저장되었습니다');
-}
-function openInstructorManager(){
-  $('newInstOrg').value=''; $('newInstName').value='';
-  renderInstructorList();
-  $('instOverlay').classList.add('on');
-  setTimeout(()=>$('newInstOrg').focus(), 50);
-}
-function closeInstructorManager(){
-  if($('newInstName').value.trim()){ addInstructor(); }  // 입력만 하고 미추가한 강사도 저장
-  $('instOverlay').classList.remove('on');
-}
-
-function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-
-/* ---------- 반 개수 제어 ---------- */
-function bumpCount(delta){
-  const inp = $('fCount');
-  let v = parseInt(inp.value,10); if(isNaN(v)) v = 0;
-  v = Math.max(0, Math.min(50, v + delta));
-  inp.value = v;
-  syncCount(v);
-}
-function onCountInput(){
-  let v = parseInt($('fCount').value,10);
-  if(isNaN(v) || v < 0) v = 0; if(v > 50) v = 50;
-  syncCount(v);
-}
-function syncCount(n){
-  setDirty();
-  // 상태 보존: 기존 데이터 유지, 부족분만 기본값 추가
-  if(n < classData.length){
-    classData = classData.slice(0, n);
-  }else{
-    while(classData.length < n){
-      classData.push({label:`${classData.length+1}반`, grade: ($('fGrade').value || ''), main:'', sub:'', equip:'', count:20, theme:'', equipSend:'', banner:false, guide:false});
-    }
-  }
-  renderClasses();
-}
-
-/* ---------- 반 렌더링 ---------- */
-function banOptions(selected){
-  let html = '', found = false;
-  for(let n=1; n<=30; n++){
-    const lab = `${n}반`;
-    if(lab===selected) found = true;
-    html += `<option value="${lab}"${lab===selected?' selected':''}>${lab}</option>`;
-  }
-  if(selected && !found){   // 직접 입력한 사용자 지정 반 이름
-    html = `<option value="${esc(selected)}" selected>${esc(selected)}</option>` + html;
-  }
-  html += `<option value="__custlabel__">＋ 직접 입력…</option>`;
-  return html;
-}
-function onClassLabelChange(i, sel){
-  setDirty();
-  if(sel.value === '__custlabel__'){
-    const v = (prompt('반 이름을 입력하세요 (예: 3반, 가반, 햇님반)') || '').trim();
-    if(v) classData[i].label = v;
-    renderClasses();
-    return;
-  }
-  classData[i].label = sel.value;
-}
-
-function equipOptions(selected){
-  let html = `<option value=""${selected===''?' selected':''}>교구 선택</option>`;
-  allEquipment().forEach(e=>{
-    const sel = (e.name===selected) ? ' selected' : '';
-    html += `<option value="${esc(e.name)}"${sel}>${esc(e.name)}</option>`;
-  });
-  html += `<option value="__custom__">＋ 교구 추가 / 관리…</option>`;
-  return html;
-}
-
-function renderClasses(){
-  const wrap = $('classWrap');
-  $('classEmpty').style.display = classData.length ? 'none' : 'block';
-  wrap.innerHTML = classData.map((c,i)=>{
-    const amt = Math.floor(priceOf(c.equip)*(c.count||0)*1.1/10)*10;
-    return `
-    <div class="clazz" data-i="${i}">
-      <div class="chead">
-        <select class="badge-select" onchange="onClassLabelChange(${i},this)">${banOptions(c.label||((i+1)+'반'))}</select>
-        <button class="del-btn no-print" onclick="deleteClass(${i})">✖ 삭제</button>
-      </div>
-      <div class="crow">
-        <div class="field">
-          <label>대상 학년</label>
-          <select onchange="onClassGradeChange(${i},this)">${gradeOptions(c.grade||'')}</select>
-        </div>
-        <div class="field">
-          <label>메인 강사</label>
-          <input type="text" list="instructorList" value="${esc(c.main)}"
-                 placeholder="이름" oninput="updClass(${i},'main',this.value)">
-        </div>
-        <div class="field">
-          <label>보조 강사</label>
-          <input type="text" list="instructorList" value="${esc(c.sub)}"
-                 placeholder="이름" oninput="updClass(${i},'sub',this.value)">
-        </div>
-        <div class="field">
-          <label>인원수</label>
-          <input type="number" min="0" value="${c.count}" oninput="updClass(${i},'count',this.value)">
-        </div>
-      </div>
-      <div class="crow2">
-        <div class="field">
-          <label>교구</label>
-          <select onchange="onEquipChange(${i},this)">${equipOptions(c.equip)}</select>
-        </div>
-        <div class="field">
-          <label>주제</label>
-          <select onchange="onClassThemeChange(${i},this)">${themeOptions(c.theme||'')}</select>
-        </div>
-        <div class="field">
-          <label>강사연구용 교구발송</label>
-          <select onchange="setClassField(${i},'equipSend',this.value)">${sendOptions(c.equipSend||'')}</select>
-        </div>
-      </div>
-      <div class="cchecks">
-        <label><input type="checkbox" ${c.banner?'checked':''} onchange="setClassField(${i},'banner',this.checked)"> 반별 현수막</label>
-        <label><input type="checkbox" ${c.guide?'checked':''} onchange="setClassField(${i},'guide',this.checked)"> 교안 발송</label>
-      </div>
-      <div class="amt">반 청구액(부가세 포함) <b>${won(amt)}</b></div>
-    </div>`;
-  }).join('');
-  recalc();
-  renderCoaching();
-}
-
-function updClass(i, key, val){
-  setDirty();
-  if(key==='count'){ classData[i].count = (val==='' ? 0 : Math.max(0, parseInt(val,10)||0)); }
-  else { classData[i][key] = val; }
-  if(key==='count'){ updateAmountRow(i); recalc(); }
-  if(key==='main'){ renderCoaching(); }
-}
-
-function updateAmountRow(i){
-  const el = document.querySelector(`.clazz[data-i="${i}"] .amt b`);
-  if(el){
-    const amt = Math.floor(priceOf(classData[i].equip)*(classData[i].count||0)*1.1/10)*10;
-    el.textContent = won(amt);
-  }
-}
-
-function onEquipChange(i, sel){
-  setDirty();
-  if(sel.value === '__custom__'){
-    sel.value = classData[i].equip || '';   // 선택 상태 원복
-    openEquipManager(i);
-    return;
-  }
-  classData[i].equip = sel.value;
-  updateAmountRow(i);
-  recalc();
-}
-
-/* ---------- 교구 관리 모달 (작성형 추가 / 단가 편집 / 삭제) ---------- */
-let pendingEquipClass = null;
-function openEquipManager(classIdx){
-  pendingEquipClass = (typeof classIdx === 'number') ? classIdx : null;
-  $('newEquipName').value = '';
-  $('newEquipPrice').value = '';
-  renderEquipManager();
-  $('equipOverlay').classList.add('on');
-  setTimeout(()=>$('newEquipName').focus(), 50);
-}
-function renderEquipManager(){
-  $('equipList').innerHTML = EQUIP.map((e,idx)=>`
-    <div class="equip-row">
-      <span class="equip-name">${esc(e.name)}</span>
-      <input type="number" min="0" step="100" value="${e.price||0}"
-             oninput="editEquipPrice(${idx}, this.value)" placeholder="단가">
-      <span class="equip-won">원</span>
-      <button class="del-mini" title="삭제" onclick="removeEquip(${idx})">✖</button>
-    </div>`).join('');
-}
-function editEquipPrice(idx, val){
-  EQUIP[idx].price = Math.max(0, parseInt(String(val).replace(/[^0-9]/g,''),10) || 0);
-  saveEquip();
-}
-function removeEquip(idx){
-  if(!confirm(`"${EQUIP[idx].name}"을(를) 교구 목록에서 삭제할까요?`)) return;
-  EQUIP.splice(idx,1);
-  saveEquip();
-  renderEquipManager();
-}
-function addEquipFromForm(){
-  const name = $('newEquipName').value.trim();
-  const price = Math.max(0, parseInt($('newEquipPrice').value.replace(/[^0-9]/g,''),10) || 0);
-  if(!name){ toast('교구명을 입력하세요'); $('newEquipName').focus(); return; }
-  if(EQUIP.some(e=>e.name===name)){ toast('이미 등록된 교구입니다'); return; }
-  EQUIP.push({name, price});
-  saveEquip();
-  $('newEquipName').value = '';
-  $('newEquipPrice').value = '';
-  renderEquipManager();
-  $('newEquipName').focus();
-  toast('교구가 추가·저장되었습니다');
-}
-function closeEquipManager(){
-  $('equipOverlay').classList.remove('on');
-  renderClasses();   // 모든 드롭다운에 변경/추가 반영
-  pendingEquipClass = null;
-}
-
-function deleteClass(i){
-  setDirty();
-  classData.splice(i,1);
-  $('fCount').value = classData.length;
-  renderClasses();             // 재인덱싱은 렌더에서 자동 처리
-}
-
-/* ---------- 합계 계산 ---------- */
-function recalc(){
-  let supply = 0;
-  classData.forEach(c=>{ supply += priceOf(c.equip) * (c.count||0); });
-  const total = Math.floor(supply * 1.1 / 10) * 10;  // 10원 단위 내림
-  const vat = total - supply;
-  $('tSupply').textContent = won(supply);
-  $('tVat').textContent = won(vat < 0 ? 0 : vat);
-  $('tTotal').textContent = won(total);
-}
-
-/* ---------- 코칭세트 대여 (메인 강사 중복 제거) ---------- */
-function renderCoaching(){
-  const names = [...new Set(classData.map(c=>c.main.trim()).filter(Boolean))];
-  const wrap = $('coachWrap');
-  $('coachEmpty').style.display = names.length ? 'none' : 'block';
-  // 기존 체크 상태 보존
-  const prev = {};
-  wrap.querySelectorAll('input[type=checkbox]').forEach(cb=>prev[cb.dataset.name]=cb.checked);
-  wrap.innerHTML = names.map(n=>`
-    <label class="coach-pill">
-      <input type="checkbox" data-name="${esc(n)}" ${prev[n]?'checked':''} onchange="setDirty()">
-      <span>${esc(n)}</span>
-    </label>`).join('');
-}
-
-/* ---------- 체크리스트 항목 목록 ---------- */
-function loadChecklistItems(){
-  try{ const a=JSON.parse(lsGet(LS.adminItems)); ADMIN_ITEMS = (Array.isArray(a)&&a.length)?a:DEFAULT_ADMIN_ITEMS.slice(); }
-  catch(e){ ADMIN_ITEMS = DEFAULT_ADMIN_ITEMS.slice(); }
-  try{ const p=JSON.parse(lsGet(LS.prepItems)); PREP_ITEMS = (Array.isArray(p)&&p.length)?p:DEFAULT_PREP_ITEMS.slice(); }
-  catch(e){ PREP_ITEMS = DEFAULT_PREP_ITEMS.slice(); }
-}
-function saveAdminItems(){ lsSet(LS.adminItems, JSON.stringify(ADMIN_ITEMS)); }
-function savePrepItems(){ lsSet(LS.prepItems, JSON.stringify(PREP_ITEMS)); }
-
-function checkedLabels(sel){
-  const out=[]; document.querySelectorAll(sel+' input:checked').forEach(cb=>out.push(cb.dataset.label)); return out;
-}
-function applyChecks(sel, saved){
-  const boxes = document.querySelectorAll(sel+' input');
-  if(!Array.isArray(saved)) return;
-  const byLabel = saved.length===0 || saved.every(x=>typeof x==='string');
-  boxes.forEach((cb,i)=>{
-    if(byLabel) cb.checked = saved.includes(cb.dataset.label);
-    else if(typeof saved[i]==='boolean') cb.checked = saved[i];
-  });
-}
-
-/* ---------- 체크리스트 렌더 (체크 상태 보존) ---------- */
-function renderChecklists(){
-  const prevA = checkedLabels('#adminChk');
-  const prevP = checkedLabels('#prepChk');
-  const build = (arr, prefix) => arr.map((t,idx)=>`
-    <label class="chk">
-      <input type="checkbox" data-label="${esc(t)}" id="${prefix}${idx}" onchange="setDirty()">
-      <span>${esc(t)}</span>
-    </label>`).join('');
-  $('adminChk').innerHTML = build(ADMIN_ITEMS,'adm');
-  $('prepChk').innerHTML  = build(PREP_ITEMS,'prep');
-  applyChecks('#adminChk', prevA);
-  applyChecks('#prepChk', prevP);
-}
-
-/* ---------- 체크리스트 관리 모달 ---------- */
-let clMgrType = 'admin';
-function currentClList(){ return clMgrType==='admin' ? ADMIN_ITEMS : PREP_ITEMS; }
-function persistClList(){ clMgrType==='admin' ? saveAdminItems() : savePrepItems(); }
-function openChecklistManager(type){
-  clMgrType = type;
-  $('clMgrTitle').textContent = (type==='admin') ? '사전 행정 체크리스트 관리' : '출강 준비물 체크리스트 관리';
-  $('clNewName').value = '';
-  renderChecklistManager();
-  $('clOverlay').classList.add('on');
-  setTimeout(()=>$('clNewName').focus(), 50);
-}
-function renderChecklistManager(){
-  $('clList').innerHTML = currentClList().map((t,idx)=>`
-    <div class="equip-row cl-row">
-      <input type="text" value="${esc(t)}" oninput="editClItem(${idx}, this.value)" placeholder="항목명">
-      <button class="del-mini" title="삭제" onclick="removeClItem(${idx})">✖</button>
-    </div>`).join('');
-}
-function editClItem(idx, val){ currentClList()[idx] = val; persistClList(); }
-function removeClItem(idx){
-  const list = currentClList();
-  if(!confirm(`"${list[idx]}" 항목을 삭제할까요?`)) return;
-  list.splice(idx,1); persistClList(); renderChecklistManager();
-}
-function addClItem(){
-  const v = $('clNewName').value.trim();
-  if(!v){ toast('항목을 입력하세요'); $('clNewName').focus(); return; }
-  const list = currentClList();
-  if(list.includes(v)){ toast('이미 있는 항목입니다'); return; }
-  list.push(v); persistClList();
-  $('clNewName').value=''; renderChecklistManager(); $('clNewName').focus();
-  toast('항목이 추가되었습니다');
-}
-function closeChecklistManager(){
-  $('clOverlay').classList.remove('on');
-  renderChecklists();   // 항목 변경을 체크박스에 반영(체크 상태 보존)
-}
-
-function uncheckedList(){
-  const out = [];
-  document.querySelectorAll('#adminChk input, #prepChk input').forEach(cb=>{
-    if(!cb.checked) out.push(cb.dataset.label.replace(/\(.*?\)/g,'').trim() + ' 누락');
-  });
-  return out;
-}
-
-/* ---------- 검증 ---------- */
-function focusScroll(el){
-  if(!el) return;
-  el.scrollIntoView({behavior:'smooth', block:'center'});
-  el.focus({preventScroll:true});
-  el.style.transition='box-shadow .2s';
-  el.style.boxShadow='0 0 0 3px rgba(178,58,72,.35)';
-  setTimeout(()=>{ el.style.boxShadow=''; }, 1600);
-}
-function validateRequired(){
-  if(!$('fDate').value){ focusScroll($('fDate')); toast('출강일을 입력하세요'); return false; }
-  if(!$('fOrg').value.trim()){ focusScroll($('fOrg')); toast('기관명을 입력하세요'); return false; }
-  if(classData.length===0){ focusScroll($('fCount')); toast('반을 1개 이상 구성하세요'); return false; }
-  const blocks = document.querySelectorAll('.clazz');
-  for(let i=0;i<classData.length;i++){
-    const c = classData[i];
-    if(!c.main.trim()){
-      focusScroll(blocks[i].querySelector('input[type=text]'));
-      toast(`${i+1}반 메인 강사를 입력하세요`); return false;
-    }
-    if(!c.equip || c.equip==='__custom__'){
-      focusScroll(blocks[i].querySelector('select'));
-      toast(`${i+1}반 교구를 선택하세요`); return false;
-    }
-  }
-  return true;
-}
-
-/* ---------- 인쇄 ---------- */
-function doPrint(){ window.print(); }
-window.addEventListener('beforeprint', ()=>{
-  $('printStamp').textContent = `출력 일시: ${nowStamp()}`;
-  hasPrinted = true;
-});
-
-/* ---------- 카카오톡 공지 복사 (재무 마스킹) ---------- */
-function copyKakao(){
-  if(!$('fOrg').value.trim() && classData.length===0){
-    toast('복사할 내용이 없습니다'); return;
-  }
-  const L = [];
-  L.push('📢 ENK LAB 출강 안내');
-  L.push('━━━━━━━━━━━━');
-  if($('fCompany').value) L.push(`🏢 업체 : ${$('fCompany').value}`);
-  if($('fProgram').value) L.push(`📚 프로그램 : ${$('fProgram').value}`);
-  if($('fDate').value) L.push(`🗓 일시 : ${$('fDate').value}`);
-  {
-    const per = $('fPeriod').value, st = $('fStart').value, en = $('fEnd').value;
-    const time = (st && en) ? `${st}~${en}` : (st || en || '');
-    if(per || time) L.push(`⏰ 시간 : ${[per, time].filter(Boolean).join(' · ')}`);
-  }
-  L.push(`📍 장소 : ${$('fRegion').value} ${$('fOrg').value.trim()}`);
-  L.push(`🎓 대상 : ${$('fGrade').value}`);
-  L.push('');
-  L.push('👥 반별 배정');
-  classData.forEach((c,i)=>{
-    const g   = c.grade ? `(${c.grade})` : '';
-    const sub = c.sub.trim() ? ` / 보조 ${c.sub.trim()}` : '';
-    const eq  = c.equip && c.equip!=='__custom__' ? ` · 교구 ${c.equip}` : '';
-    const th  = c.theme ? ` · 주제 ${c.theme}` : '';
-    const snd = (c.equipSend && c.equipSend!=='발송불필요') ? ` · 연구교구 ${c.equipSend}` : '';
-    L.push(`${c.label||((i+1)+'반')}${g} — 메인 ${c.main.trim()||'미정'}${sub}${eq}${th}${snd}`);
-  });
-  L.push('');
-  L.push("📌 공지를 확인하신 강사님은 톡방에 '확인' 메시지나 하트(❤️)를 남겨주세요.");
-  copyText(L.join('\n'));
-}
-function copyText(text){
-  if(navigator.clipboard && window.isSecureContext){
-    navigator.clipboard.writeText(text).then(()=>toast('카톡 공지가 복사되었습니다'))
-      .catch(()=>fallbackCopy(text));
-  }else{
-    fallbackCopy(text);
-  }
-}
-function fallbackCopy(text){
-  const ta = document.createElement('textarea');
-  ta.value = text;
-  ta.style.position='fixed'; ta.style.top='-9999px'; ta.style.opacity='0';
-  document.body.appendChild(ta); ta.focus(); ta.select();
-  let ok=false;
-  try{ ok = document.execCommand('copy'); }catch(e){ ok=false; }
-  document.body.removeChild(ta);
-  if(ok) toast('카톡 공지가 복사되었습니다');
-  else { window.prompt('아래 내용을 길게 눌러 복사하세요', text); }
-}
-
-/* ---------- 구글 시트 전송 ---------- */
-function sendToSheet(){
-  if(sent) return;
-  // 1) 인쇄 방어벽
-  if(!hasPrinted){
-    alert('아직 인쇄하지 않았습니다.\n먼저 [인쇄 / PDF 저장]으로 출력 후 전송해 주세요.');
-    return;
-  }
-  // 2) 필수항목 검증
-  if(!validateRequired()) return;
-  // 3) GAS URL 확인
-  const url = getGas();
-  if(!url){
-    alert('구글 Apps Script URL이 설정되지 않았습니다.\n우측 상단 ⚙️ 관리자 설정에서 등록해 주세요.');
-    return;
-  }
-  const supply = classData.reduce((s,c)=>s+priceOf(c.equip)*(c.count||0),0);
-  const total = Math.floor(supply*1.1/10)*10;
-  const coaching = [];
-  document.querySelectorAll('#coachWrap input:checked').forEach(cb=>coaching.push(cb.dataset.name));
-
-  const payload = {
-    date: $('fDate').value,
-    region: $('fRegion').value,
-    org: $('fOrg').value.trim(),
-    company: $('fCompany').value,
-    program: $('fProgram').value,
-    period: $('fPeriod').value,
-    startTime: $('fStart').value,
-    endTime: $('fEnd').value,
-    grade: $('fGrade').value,
-    instructors: $('fRoster').value.trim(),
-    classes: classData.map((c,i)=>({
-      no:i+1, class:c.label||((i+1)+'반'), grade:c.grade||'', main:c.main.trim(), sub:c.sub.trim(),
-      equip:c.equip, count:c.count, theme:c.theme||'', equipSend:c.equipSend||'',
-      banner:!!c.banner, guide:!!c.guide,
-      amount: Math.floor(priceOf(c.equip)*(c.count||0)*1.1/10)*10
-    })),
-    supply, vat: total-supply, total,
-    missing: uncheckedList().join(', '),
-    coaching: coaching.join(', '),
-    sentAt: nowStamp()
-  };
-
-  const btn = $('sendBtn');
-  btn.disabled = true; btn.textContent = '전송 중…';
-
-  fetch(url, {
-    method:'POST',
-    mode:'no-cors',
-    headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body: JSON.stringify(payload)
-  }).then(()=>{
-    sent = true;
-    btn.textContent = '✅ 전송 완료';
-    isDirty = false;
-    toast('구글 시트로 전송되었습니다');
-    smartReset();              // 강사 명단만 남기고 초기화
-  }).catch(err=>{
-    btn.disabled = false; btn.textContent = '☁️ 구글 시트로 전송';
-    alert('전송에 실패했습니다. 네트워크 또는 URL을 확인해 주세요.\n\n' + err);
-  });
-}
-
-/* ---------- 저장된 출강 목록 ---------- */
-function loadRecords(){
-  try{ const s = JSON.parse(lsGet(LS.records)); RECORDS = Array.isArray(s) ? s : []; }
-  catch(e){ RECORDS = []; }
-}
-function saveRecords(){ lsSet(LS.records, JSON.stringify(RECORDS)); }
-
-function collectState(){
-  const admin = checkedLabels('#adminChk');
-  const prep  = checkedLabels('#prepChk');
-  const coaching=[];
-  document.querySelectorAll('#coachWrap input:checked').forEach(cb=>coaching.push(cb.dataset.name));
-  return {
-    date:$('fDate').value, region:$('fRegion').value, org:$('fOrg').value.trim(),
-    grade:$('fGrade').value, roster:$('fRoster').value.trim(),
-    company:$('fCompany').value, program:$('fProgram').value,
-    period:$('fPeriod').value, startTime:$('fStart').value, endTime:$('fEnd').value,
-    classes: classData.map((c,i)=>({label:c.label||((i+1)+'반'), grade:c.grade||'', main:c.main, sub:c.sub, equip:c.equip, count:c.count, theme:c.theme||'', equipSend:c.equipSend||'', banner:!!c.banner, guide:!!c.guide})),
-    admin, prep, coaching
-  };
-}
-function isEmptyState(s){ return !s.date && !s.org && s.classes.length===0; }
-
-function saveCurrentRecord(){
-  const s = collectState();
-  if(isEmptyState(s)) return false;      // 빈 양식은 저장하지 않음
-  s.savedAt = nowStamp();
-  const idx = (currentRecordId!=null) ? RECORDS.findIndex(r=>r.id===currentRecordId) : -1;
-  if(idx >= 0){
-    s.id = currentRecordId;              // 같은 항목에 덮어쓰기
-    RECORDS[idx] = s;
-  }else{
-    s.id = Date.now();
-    RECORDS.unshift(s);
-    currentRecordId = s.id;
-    if(RECORDS.length > 60) RECORDS = RECORDS.slice(0,60);
-  }
-  saveRecords();
-  renderRecords();
-  return true;
-}
-function renderRecords(){
-  const box = $('recordList');
-  $('recordEmpty').style.display = RECORDS.length ? 'none' : 'block';
-  box.innerHTML = RECORDS.map(r=>{
-    const cls = r.classes && r.classes.length ? ` · ${r.classes.length}개 반` : '';
-    const meta = [r.company, r.program].filter(Boolean).join(' · ');
-    return `
-    <div class="rec" onclick="requestLoadRecord(${r.id})">
-      <button class="rec-del" title="삭제" onclick="event.stopPropagation();deleteRecord(${r.id})">✖</button>
-      <div class="rec-date">🗓 ${esc(r.date || '날짜 미정')}</div>
-      <div class="rec-org">${esc(r.org || '기관 미정')}</div>
-      <div class="rec-grade">${esc(r.grade || '학년 미정')}${cls}</div>
-      ${meta ? `<div class="rec-grade">${esc(meta)}</div>` : ''}
-    </div>`;
-  }).join('');
-}
-let pendingLoadId = null;
-function requestLoadRecord(id){
-  if(isDirty && !isEmptyState(collectState())){
-    pendingLoadId = id;
-    $('leaveMsg').textContent = '작성 중인 내용이 아직 저장되지 않았습니다. 저장하시겠습니까?';
-    $('leaveOverlay').classList.add('on');
-    return;
-  }
-  doLoadRecord(id);
-}
-function leaveSaveAndGo(){
-  const id = pendingLoadId; pendingLoadId = null;
-  $('leaveOverlay').classList.remove('on');
-  saveCurrentRecord();
-  if(id != null) doLoadRecord(id);
-  else { fullReset(); }
-}
-function leaveDiscardAndGo(){
-  const id = pendingLoadId; pendingLoadId = null;
-  $('leaveOverlay').classList.remove('on');
-  if(id != null) doLoadRecord(id);
-  else { fullReset(); }
-}
-function leaveCancel(){ pendingLoadId = null; $('leaveOverlay').classList.remove('on'); }
-
-function doLoadRecord(id){
-  const r = RECORDS.find(x=>x.id===id);
-  if(!r) return;
-
-  // 목록에만 있는 학년이 있으면 학년 목록에 복원
-  [r.grade, ...(r.classes||[]).map(c=>c.grade)].filter(Boolean).forEach(g=>{
-    if(!GRADES.includes(g)) GRADES.push(g);
-  });
-  saveGrades();
-  if(r.company && !COMPANIES.includes(r.company)){ COMPANIES.push(r.company); saveCompanies(); }
-  if(r.program && !PROGRAMS.includes(r.program)){ PROGRAMS.push(r.program); savePrograms(); }
-  if(r.period && !PERIODS.includes(r.period)){ PERIODS.push(r.period); savePeriods(); }
-
-  $('fDate').value = r.date || '';
-  $('fRegion').value = r.region || '경북';
-  $('fOrg').value = r.org || '';
-  $('fRoster').value = r.roster || '';
-  lsSet(LS.roster, r.roster || '');
-  refreshDatalist();
-  renderTopGrade();
-  $('fGrade').value = r.grade || '';
-  renderCompanySelect(); $('fCompany').value = r.company || '';
-  renderProgramSelect(); $('fProgram').value = r.program || '';
-  renderPeriodSelect(); $('fPeriod').value = r.period || '';
-  $('fStart').value = r.startTime || '';
-  $('fEnd').value = r.endTime || '';
-
-  classData = (r.classes||[]).map((c,idx)=>({
-    label:c.label||((idx+1)+'반'), grade:c.grade||'', main:c.main||'', sub:c.sub||'', equip:c.equip||'',
-    count:(c.count==null?20:c.count),
-    theme:c.theme||'', equipSend:c.equipSend||'', banner:!!c.banner, guide:!!c.guide
-  }));
-  $('fCount').value = classData.length;
-  renderClasses();
-
-  applyChecks('#adminChk', r.admin||[]);
-  applyChecks('#prepChk',  r.prep||[]);
-  document.querySelectorAll('#coachWrap input').forEach(cb=>{
-    cb.checked = (r.coaching||[]).includes(cb.dataset.name);
-  });
-
-  onMeta();
-  const btn=$('sendBtn'); btn.disabled=false; btn.textContent='☁️ 구글 시트로 전송'; sent=false;
-  hasPrinted=false; isDirty=false;
-  currentRecordId = id;            // 이후 저장은 이 항목에 덮어쓰기
-  toast('저장된 목록을 불러왔습니다');
-  window.scrollTo({top:0, behavior:'smooth'});
-}
-function deleteRecord(id){
-  const r = RECORDS.find(x=>x.id===id);
-  if(!confirm(`"${(r&&r.org)||'이 항목'}" 저장 목록을 삭제할까요?`)) return;
-  RECORDS = RECORDS.filter(x=>x.id!==id);
-  saveRecords();
-  renderRecords();
-}
-
-/* ---------- 스마트 초기화 (전송 후 · 강사 명단 유지) ---------- */
-function smartReset(){
-  $('fDate').value=''; $('fOrg').value=''; $('fRegion').selectedIndex=0;
-  renderTopGrade(); $('fGrade').selectedIndex=0;
-  renderCompanySelect(); $('fCompany').selectedIndex=0;
-  renderProgramSelect(); $('fProgram').selectedIndex=0;
-  renderPeriodSelect(); $('fPeriod').selectedIndex=0;
-  $('fStart').value=''; $('fEnd').value='';
-  $('fCount').value=0; classData=[]; renderClasses();
-  document.querySelectorAll('#adminChk input, #prepChk input').forEach(cb=>cb.checked=false);
-  document.title='[ENK LAB] 출강 체크리스트';
-  hasPrinted=false; isDirty=false;
-  currentRecordId = null;          // 새 양식 → 다음 저장은 신규 항목
-}
-
-/* ---------- 전체 초기화 (강사 명단까지 비움) ---------- */
-function fullReset(){
-  smartReset();
-  $('fRoster').value=''; lsSet(LS.roster,''); refreshDatalist();
-}
-
-/* ---------- 새로 작성하기: 현재 내용 저장 → 명단 포함 전체 초기화 ---------- */
-function resetAll(){
-  const saved = saveCurrentRecord();
-  const btn=$('sendBtn'); btn.disabled=false; btn.textContent='☁️ 구글 시트로 전송'; sent=false;
-  fullReset();
-  toast(saved ? '저장 후 새 양식으로 초기화했습니다' : '새 양식으로 초기화했습니다');
-}
-
-/* ---------- 관리자 설정 ---------- */
-function openAdmin(){
-  const input = prompt('관리자 PIN 번호를 입력하세요');
-  if(input===null) return;
-  if(input.trim().toUpperCase() === MASTER_KEY){
-    lsSet(LS.pin,'0000');
-    alert('마스터 복구 키가 확인되었습니다.\nPIN이 0000으로 초기화되었습니다.');
-    return;
-  }
-  if(input === getPin()){
-    $('mGas').value = getGas();
-    $('mPin').value = '';
-    $('adminOverlay').classList.add('on');
-  }else{
-    alert('PIN 번호가 일치하지 않습니다.');
-  }
-}
-function closeAdmin(){ $('adminOverlay').classList.remove('on'); }
-function saveAdmin(){
-  lsSet(LS.gas, $('mGas').value.trim());
-  const np = $('mPin').value.trim();
-  if(np){
-    if(!/^[0-9]{4,8}$/.test(np)){ alert('PIN은 4~8자리 숫자로 설정해 주세요.'); return; }
-    lsSet(LS.pin, np);
-  }
-  closeAdmin();
-  toast('관리자 설정이 저장되었습니다');
-}
-// 오버레이 바깥 클릭 시 닫기
-$('adminOverlay').addEventListener('click', e=>{ if(e.target===$('adminOverlay')) closeAdmin(); });
-$('equipOverlay').addEventListener('click', e=>{ if(e.target===$('equipOverlay')) closeEquipManager(); });
-$('clOverlay').addEventListener('click', e=>{ if(e.target===$('clOverlay')) closeChecklistManager(); });
-$('leaveOverlay').addEventListener('click', e=>{ if(e.target===$('leaveOverlay')) leaveCancel(); });
-$('instOverlay').addEventListener('click', e=>{ if(e.target===$('instOverlay')) closeInstructorManager(); });
-
-/* ---------- 이탈 방지 ---------- */
-window.addEventListener('beforeunload', e=>{
-  if(isDirty){ e.preventDefault(); e.returnValue=''; return ''; }
-});
-
-/* ---------- 초기화 ---------- */
-(function init(){
-  loadEquip();                 // 교구 33종 목록 로드/시드
-  loadGrades();                // 대상 학년 목록 로드/시드
-  loadThemes();                // 반 주제 목록 로드/시드
-  loadPeriods();               // 차시 목록 로드/시드
-  loadChecklistItems();        // 체크리스트 항목 로드/시드
-  loadCompanies();             // 출강 업체 목록 로드/시드
-  loadPrograms();              // 프로그램명 목록 로드/시드
-  loadRecords();               // 저장된 출강 목록 로드
-  loadInstructors();           // 저장된 강사 마스터 명단 로드
-  const r = lsGet(LS.roster); if(r){ $('fRoster').value = r; }  // 강사 명단 복원
-  refreshDatalist();
-  renderInstructorPicker();
-  renderTopGrade();
-  renderPeriodSelect();
-  renderCompanySelect();
-  renderProgramSelect();
-  renderChecklists();
-  renderClasses();
-  renderRecords();
-})();
+const DEFAULT_CHECKLIST = ['교구 준비','택배 발송','송장 입력','강사 배정 확인','교안 발송','활동지/워크북 준비','현수막 준비','강사 공지 완료','일일출강교육일지','만족도 설문 준비'];
+const NAVS = [
+ ['dashboard','🏠 대시보드'],['schedules','📅 출강관리'],['logistics','📦 교구물류'],['instructors','👩‍🏫 강사관리'],['orgs','🏫 기관관리'],['equipment','📚 교구·재고관리'],['returns','🔁 반납·불량관리'],['guides','📨 교안 발송관리'],['kakao','💬 카톡 공지관리'],['history','📊 이력·전송'],['settings','⚙ 설정']
+];
+let view = 'dashboard';
+let state = null;
+let activeScheduleId = null;
+let activeShipmentId = null;
+function uid(prefix='id'){return prefix+'_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8)}
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+function jget(k,def=null){try{const v=localStorage.getItem(k);return v?JSON.parse(v):def}catch(e){return def}}
+function jset(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function ls(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function toast(msg){const t=$('toast');t.textContent=msg;t.style.opacity='1';clearTimeout(t._t);t._t=setTimeout(()=>t.style.opacity='0',2200)}
+function today(){const d=new Date();return d.toISOString().slice(0,10)}
+function fmtDate(d){if(!d)return '';return String(d).replaceAll('-','.')}
+function addDays(dateStr,n){if(!dateStr)return '';const d=new Date(dateStr+'T00:00:00');if(isNaN(d.getTime()))return '';d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)}
+function nextWeekday(dateStr){if(!dateStr)return '';let d=new Date(dateStr+'T00:00:00');if(isNaN(d.getTime()))return '';while(d.getDay()==0||d.getDay()==6)d.setDate(d.getDate()+1);return d.toISOString().slice(0,10)}
+function monthEnd(dateStr){if(!dateStr)return '';const d=new Date(dateStr+'T00:00:00');if(isNaN(d.getTime()))return '';return new Date(d.getFullYear(),d.getMonth()+1,0).toISOString().slice(0,10)}
+function nowStamp(){const d=new Date(),p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`}
+function defaultState(){return {version:VERSION,migratedAt:null,settings:{pin:'',gasUrl:'',gasPin:'',kakaoTemplates:defaultTemplates()},masters:{grades:[...DEFAULT_GRADES],themes:[...DEFAULT_THEMES],periods:[...DEFAULT_PERIODS],companies:[...DEFAULT_COMPANIES],programs:[...DEFAULT_PROGRAMS],couriers:[...COURIERS]},schedules:[],shipments:[],instructors:[],orgs:[],equipment:DEFAULT_EQUIPMENT.map(e=>({id:uid('eq'),name:e.name,category:'아트고',type:'지급용',oldPrice:e.price,normal:0,sample:0,bad:0,note:''})),checklist:{items:[...DEFAULT_CHECKLIST],legacy:[]},guideSends:[],noticeStatus:{},tasks:[],inventoryLog:[],statusLog:[],teacherHistory:[],returnStatus:{},backups:[]}}
+function defaultTemplates(){return {first:DEFAULT_FIRST_NOTICE,final:DEFAULT_FINAL_NOTICE,after:DEFAULT_AFTER_NOTICE}}
+function loadState(){state=jget(STORE_KEY);if(!state){state=defaultState()} ensureState();}
+function saveState(){jset(STORE_KEY,state)}
+function ensureState(){const d=defaultState();state.version=state.version||VERSION;state.settings={...d.settings,...(state.settings||{})};state.masters={...d.masters,...(state.masters||{})};['schedules','shipments','instructors','orgs','equipment','guideSends','tasks','inventoryLog','statusLog','teacherHistory','backups'].forEach(k=>state[k]=Array.isArray(state[k])?state[k]:[]);state.checklist={items:state.checklist?.items||d.checklist.items, legacy:state.checklist?.legacy||[]};state.returnStatus=state.returnStatus||{};if(Array.isArray(state.masters.companies)&&!state.masters.companies.includes('ENK LAB 본부'))state.masters.companies.unshift('ENK LAB 본부');state.settings.kakaoTemplates={...defaultTemplates(),...(state.settings.kakaoTemplates||{})};}
+function detectLegacy(){return Object.values(LEGACY_KEYS).some(k=>ls(k)!==null)}
+function backupLegacyDownload(){const data={createdAt:nowStamp(),keys:{}};Object.entries(LEGACY_KEYS).forEach(([name,k])=>data.keys[k]=ls(k));downloadJSON(data,'ENK_기존데이터_업데이트전백업_'+nowStamp().replace(/[-: ]/g,'')+'.json')}
+function migrateLegacy(){const legacyRecords=jget(LEGACY_KEYS.records,[]);const legacyInst=jget(LEGACY_KEYS.instructors,[]);const legacyEq=jget(LEGACY_KEYS.equip,[]);const legacyAdmin=jget(LEGACY_KEYS.adminItems,[]);const legacyPrep=jget(LEGACY_KEYS.prepItems,[]);
+  if(Array.isArray(legacyInst)) legacyInst.forEach(it=>{if(!it||!it.name)return;if(!state.instructors.some(x=>x.name===it.name&&x.org===(it.org||'')))state.instructors.push({id:uid('t'),org:it.org||'',name:it.name||'',phone:'',email:'',address:'',detailAddress:'',zip:'',memo:'',legacy:true})});
+  if(Array.isArray(legacyEq)&&legacyEq.length){legacyEq.forEach(e=>{if(!e||!e.name)return;if(!state.equipment.some(x=>x.name===e.name))state.equipment.push({id:uid('eq'),name:e.name,category:'아트고',type:'지급용',oldPrice:e.price||0,normal:0,sample:0,bad:0,note:'기존 교구목록에서 변환'})})}
+  ['grades','themes','periods','companies','programs'].forEach(k=>{const arr=jget(LEGACY_KEYS[k],[]);if(Array.isArray(arr)&&arr.length)state.masters[k]=[...new Set([...(state.masters[k]||[]),...arr])];});
+  const legacyChkAll=[];if(Array.isArray(legacyAdmin))legacyChkAll.push(...legacyAdmin);if(Array.isArray(legacyPrep))legacyChkAll.push(...legacyPrep);if(legacyChkAll.length)state.checklist.items=[...new Set([...(state.checklist.items||[]),...legacyChkAll])];
+  if(Array.isArray(legacyRecords)) legacyRecords.forEach(r=>{if(!r||state.schedules.some(s=>s.legacyId===r.id))return;const chk=[...new Set([...(Array.isArray(r.prep)?r.prep:[]),...(Array.isArray(r.admin)?r.admin:[])].filter(x=>typeof x==='string'))];state.schedules.push({id:uid('sch'),legacyId:r.id,legacy:true,status:'예정',date:r.date||'',region:r.region||'경북',org:r.org||'',company:r.company||'',program:r.program||'',period:r.period||'',startTime:r.startTime||'',endTime:r.endTime||'',grade:r.grade||'',roster:r.roster||'',orgInfo:{address:'',parking:'',manager:'',phone:'',waitingRoom:'',arrivalTime:'',entry:''},classes:(r.classes||[]).map((c,i)=>({label:c.label||`${i+1}반`,grade:c.grade||'',main:c.main||'',sub:c.sub||'',equip:c.equip||'',count:c.count??20,theme:c.theme||'',equipSend:c.equipSend||'',banner:!!c.banner,guide:!!c.guide,log:!!c.log})),checks:{prep:chk},notice:{first:'미발송',final:'미발송',after:'미발송'},guideStatus:'미발송',createdAt:r.savedAt||nowStamp(),updatedAt:nowStamp()})});
+  const legacyItems=[];if(Array.isArray(legacyAdmin))legacyAdmin.forEach(x=>legacyItems.push({type:'사전 행정',text:x}));if(Array.isArray(legacyPrep))legacyPrep.forEach(x=>legacyItems.push({type:'출강 준비물',text:x}));state.checklist.legacy=legacyItems;
+  const gas=ls(LEGACY_KEYS.gas); if(gas) state.settings.gasUrl=gas; const pin=ls(LEGACY_KEYS.pin); if(pin&&!state.settings.pin){state.settings.pin=pin;}
+  state.migratedAt=nowStamp(); saveState(); localStorage.setItem(LEGACY_DONE_KEY,'1');}
+function downloadJSON(obj,filename){const blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function downloadText(text,filename,type='text/plain'){const blob=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function openModal(html){$('modalBody').innerHTML=html;$('modal').classList.add('on')}
+function closeModal(){$('modal').classList.remove('on')}
+$('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
+function renderNav(){$('nav').innerHTML=NAVS.map(n=>`<button class="${view===n[0]?'active':''}" onclick="go('${n[0]}')">${n[1]}</button>`).join('')}
+function go(v){view=v;activeScheduleId=null;activeShipmentId=null;render()}
+function setTitle(title,actions=''){$('viewTitle').textContent=title;$('topActions').innerHTML=actions}
+function render(){renderNav();refreshDatalists();const map={dashboard:renderDashboard,schedules:renderSchedules,logistics:renderLogistics,instructors:renderInstructors,orgs:renderOrgs,equipment:renderEquipment,returns:renderReturns,guides:renderGuides,kakao:renderKakao,history:renderHistory,settings:renderSettings};(map[view]||renderDashboard)();saveState()}
+function refreshDatalists(){ $('teacherList').innerHTML=state.instructors.map(t=>`<option value="${esc(t.name)}">`).join(''); $('orgList').innerHTML=state.orgs.map(o=>`<option value="${esc(o.name)}">`).join('');}
+function statusPill(s){const cls=s==='미발송'?'yellow':s==='발송완료'?'green':s==='배송완료'?'blue':s==='수령확인'?'deep':s==='일정삭제됨'?'red':'';return `<span class="pill ${cls}">${esc(s||'')}</span>`}
+function equipByName(name){return state.equipment.find(e=>e.name===name)}
+function instructorByName(name){return state.instructors.find(t=>t.name===name)}
+function orgByName(name){return state.orgs.find(o=>o.name===name)}
+function getStock(eqName,type='normal'){const e=equipByName(eqName);return e?Number(e[type]||0):0}
+function changeStock(eqName,type,delta,memo,rel={}){let e=equipByName(eqName);if(!e){e={id:uid('eq'),name:eqName,category:'기타',type:'지급용',oldPrice:0,normal:0,sample:0,bad:0,note:''};state.equipment.push(e)}e[type]=Number(e[type]||0)+Number(delta||0);state.inventoryLog.unshift({id:uid('log'),at:nowStamp(),equip:eqName,type,delta:Number(delta||0),after:e[type],memo:memo||'',org:rel.org||'',teacher:rel.teacher||''});}
+function mapSearch(q){if(!q||!q.trim()){toast('검색할 주소를 입력하세요');return}window.open('https://map.naver.com/p/search/'+encodeURIComponent(q.trim()),'_blank')}
+function mapBtn(inputId){return `<button type="button" class="btn btn-ghost mini no-print" onclick="mapSearch(document.getElementById('${inputId}').value)">🗺 지도</button>`}
+function renderDashboard(){setTitle('대시보드',`<button class="btn btn-ghost" onclick="backupAll()">💾 전체 백업</button>`);const todayStr=today();const upcoming=state.schedules.filter(s=>s.date>=todayStr&&s.status!=='취소').sort((a,b)=>a.date.localeCompare(b.date)).slice(0,6);const unshipped=state.shipments.filter(s=>s.status==='미발송').length;const overReturns=overdueReturns();const neg=state.equipment.filter(e=>Number(e.normal||0)<0);const tasks=autoTasks();
+$('app').innerHTML=`<div class="dash-grid"><div class="dash-card"><div class="label">다가오는 출강</div><div class="num">${upcoming.length}</div></div><div class="dash-card"><div class="label">미발송 교구</div><div class="num">${unshipped}</div></div><div class="dash-card"><div class="label">반납기한 초과</div><div class="num">${overReturns.length}</div></div><div class="dash-card"><div class="label">재고부족 교구</div><div class="num">${neg.length}</div></div></div>
+<div class="split"><div><div class="card"><h3>📌 오늘 해야 할 일</h3><div class="list">${tasks.length?tasks.map(t=>`<label class="list-item"><span><input type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${t.id}',this.checked)"> ${esc(t.text)}</span><span class="muted">${esc(t.type)}</span></label>`).join(''):'<div class="muted">오늘 자동 생성된 할 일이 없습니다.</div>'}</div><p class="muted">※ 오늘 해야 할 일은 업무 확인용입니다. 완료 후 직접 체크해 주세요.</p></div><div class="card"><h3>🗓 다가오는 출강 일정</h3>${upcoming.length?table(['출강일','기관','프로그램','상태'],upcoming.map(s=>[fmtDate(s.date),esc(s.org),esc(s.program),statusPill(s.status)])):'<div class="muted">다가오는 일정이 없습니다.</div>'}</div></div><div><div class="card"><h3>🔴 재고 부족</h3>${neg.length?neg.map(e=>`<div class="list-item"><b>${esc(e.name)}</b><span class="danger-text">${e.normal}개</span></div>`).join(''):'<div class="muted">마이너스 재고가 없습니다.</div>'}</div><div class="card"><h3>최근 상태 변경 로그</h3>${state.statusLog.slice(0,8).map(l=>`<div class="list-item"><span>${esc(l.at)} / ${esc(l.title)}</span><span class="muted">${esc(l.memo||'')}</span></div>`).join('')||'<div class="muted">로그가 없습니다.</div>'}</div></div></div>`}
+function autoTasks(){let tasks=[...state.tasks];state.equipment.filter(e=>e.normal<0).forEach(e=>{const id='neg_'+e.id;if(!tasks.some(t=>t.id===id))tasks.push({id,type:'재고부족',text:`${e.name} ${Math.abs(e.normal)}개 추가 구매 필요`,done:false,auto:true})});overdueReturns().forEach(r=>{const id='ret_'+r.id;if(!tasks.some(t=>t.id===id))tasks.push({id,type:'반납기한 초과',text:`${r.teacher} / ${r.equip} 반납 확인 필요`,done:false,auto:true})});state.guideSends.filter(g=>g.status!=='발송완료').forEach(g=>{const id='guide_'+g.id;if(!tasks.some(t=>t.id===id))tasks.push({id,type:'교안 미발송',text:`${g.teacher} 교안 발송 확인`,done:false,auto:true})});state.tasks=tasks;return tasks.filter(t=>!t.done)}
+function toggleTask(id,done){const t=state.tasks.find(x=>x.id===id);if(t)t.done=done;saveState();renderDashboard()}
+function table(head,rows,aligns){const al=i=>{const a=aligns&&aligns[i];return a==='r'?' style="text-align:right"':a==='c'?' style="text-align:center"':''};return `<div class="table-wrap"><table><thead><tr>${head.map((h,i)=>`<th${al(i)}>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td${al(i)}>${c??''}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`}
+function pruneEmptySchedules(){state.schedules=state.schedules.filter(s=>s.id===activeScheduleId||s.legacy||s.date||s.org||(s.classes&&s.classes.length))}
+function renderSchedules(){pruneEmptySchedules();setTitle('출강관리',`<button class="btn btn-navy" onclick="newSchedule()">＋ 새 출강일정</button><button class="btn btn-ghost" onclick="exportCSV('schedules')">엑셀/CSV</button>`);if(activeScheduleId){return renderScheduleForm(activeScheduleId)}const rows=state.schedules.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(s=>[fmtDate(s.date),esc(s.org),esc(s.program),esc(s.roster||''),statusPill(s.status),`<button class="btn btn-ghost mini" onclick="editSchedule('${s.id}')">열기</button> <button class="btn btn-navy mini" onclick="createShipmentFromSchedule('${s.id}')">발송신청서 생성</button>`]);$('app').innerHTML=`<div class="card"><h3>📅 출강 일정 목록</h3>${rows.length?table(['출강일','기관','프로그램','강사명단','상태','관리'],rows):'<div class="muted">저장된 출강일정이 없습니다.</div>'}</div>`}
+function newSchedule(){const s={id:uid('sch'),status:'예정',date:'',region:'경북',org:'',company:'',program:'',period:'',startTime:'',endTime:'',grade:'',roster:'',orgInfo:{address:'',parking:'',manager:'',phone:'',waitingRoom:'',arrivalTime:'',entry:''},classes:[],checks:{prep:[]},notice:{first:'미발송',final:'미발송',after:'미발송'},guideStatus:'미발송',createdAt:nowStamp(),updatedAt:nowStamp()};state.schedules.unshift(s);activeScheduleId=s.id;render()}
+function editSchedule(id){activeScheduleId=id;render()}
+function renderScheduleForm(id){const s=state.schedules.find(x=>x.id===id);if(!s){activeScheduleId=null;return renderSchedules()}setTitle('출강관리 상세',`<button class="btn btn-ghost" onclick="activeScheduleId=null;render()">← 목록</button><button class="btn btn-navy" onclick="saveScheduleForm('${id}')">저장</button><button class="btn btn-gold" onclick="printSchedule('${id}')">인쇄/PDF</button><button class="btn btn-red" onclick="deleteSchedule('${id}')">삭제</button>`);const orgInfo=s.orgInfo||{};$('app').innerHTML=`<div class="print-head print-only"><b>[ENK LAB] ${esc(s.org||'')} 출강 체크리스트</b> · ${fmtDate(s.date)}</div><div class="card"><h3>기본 정보</h3><div class="grid g12"><div class="grid-sub">일정</div>${field('출강일',`<input type="date" id="sch_date" value="${esc(s.date)}">`,'c4')}${field('지역',selectHtml('sch_region',['경북','경남','대구','부산','울산'],s.region),'c4')}${field('상태',selectHtml('sch_status',['예정','준비중','출강완료','취소','연기'],s.status),'c4')}<div class="grid-sub">기관 · 과정</div>${field('기관명',`<input id="sch_org" list="orgList" value="${esc(s.org)}" onblur="loadOrgInfoToForm()">`,'c4')}${field('출강 업체',selectHtml('sch_company',state.masters.companies,s.company,'companies'),'c4')}${field('대상학년',selectHtml('sch_grade',state.masters.grades,s.grade,'grades'),'c4')}<div class="grid-sub">프로그램 · 시간</div>${field('프로그램명',selectHtml('sch_program',state.masters.programs,s.program,'programs'),'c4')}${field('시작시간',`<input type="time" id="sch_start" value="${esc(s.startTime)}">`,'c4')}${field('종료시간',`<input type="time" id="sch_end" value="${esc(s.endTime)}">`,'c4')}<div class="grid-sub">차시 · 강사</div>${field('차시',selectHtml('sch_period',state.masters.periods,s.period,'periods'),'c4')}${field('오늘의 투입 강사',`<input id="sch_roster" value="${esc(s.roster)}" list="teacherList" placeholder="이름을 콤마(,)로 구분">`,'c8')}</div></div>
+<div class="card"><h3>기관 상세정보</h3><div class="grid g12"><div class="grid-sub">주소 · 담당자</div>${field('기관 주소',`<div class="addr-row"><input id="org_address" value="${esc(orgInfo.address||'')}" placeholder="주소/우편번호 수동 입력 가능">${mapBtn('org_address')}</div>`,'c6')}${field('담당자명',`<input id="org_manager" value="${esc(orgInfo.manager||'')}">`,'c3')}${field('담당자 연락처',`<input id="org_phone" value="${esc(orgInfo.phone||'')}">`,'c3')}<div class="grid-sub">현장 안내</div>${field('강사 대기실 위치',`<input id="org_waiting" value="${esc(orgInfo.waitingRoom||'')}">`,'c4')}${field('도착시간',`<input id="org_arrival" value="${esc(orgInfo.arrivalTime||'')}" placeholder="오전 OO:OO">`,'c4')}${field('출입 방법',`<input id="org_entry" value="${esc(orgInfo.entry||'')}">`,'c4')}${field('주차 안내',`<textarea id="org_parking">${esc(orgInfo.parking||'')}</textarea>`,'c12')}</div></div>
+<div class="card"><h3>반 구성 · 강사 · 교구 배정</h3><div class="toolbar"><button class="btn btn-ghost mini" onclick="addClassRow('${id}')">＋ 반 추가</button></div><div id="classRows">${renderClassRows(s)}</div><p class="muted">※ 인원수는 학생 수입니다. 교구 발송수량과 재고 차감 기준은 교구물류에서 별도로 관리됩니다.</p></div>
+<div class="card"><h3>출강 체크리스트</h3><div class="chk-grid">${state.checklist.items.map((item,ci)=>`<label class="chk-item"><input type="checkbox" ${s.checks?.prep?.includes(item)?'checked':''} onchange="toggleScheduleCheck('${id}',${ci},this.checked)"> ${esc(item)}</label>`).join('')}</div><div class="toolbar"><button class="btn btn-ghost mini" onclick="openChecklistEdit()">항목 관리</button></div></div>
+<div class="card"><h3>카톡 공지 상태</h3>${noticeStatusBlock(s)}<div class="toolbar"><button class="btn btn-ghost" onclick="copyKakaoNotice('${id}','first')">💬 최초공지 복사</button><button class="btn btn-ghost" onclick="copyKakaoNotice('${id}','final')">📢 최종안내 복사</button><button class="btn btn-ghost" onclick="copyKakaoNotice('${id}','after')">✅ 출강후 안내 복사</button><button class="btn btn-navy" onclick="createShipmentFromSchedule('${id}')">📦 발송신청서 생성</button></div></div><div class="print-foot print-only">출력 일시: ${nowStamp()} · ENK LAB</div>`}
+function field(label,inner,cls){return `<div class="field ${cls||''}"><label>${label}</label>${inner}</div>`}
+function selectHtml(id,arr,selected,addKey){const add=!!addKey;return `<select id="${id}"${add?` onchange="liveAdd(this,'${addKey}')"`:''}>${arr.map(v=>`<option value="${esc(v)}" ${v===selected?'selected':''}>${esc(v)}</option>`).join('')}${selected&&!arr.includes(selected)?`<option value="${esc(selected)}" selected>${esc(selected)}</option>`:''}${add?'<option value="__add__">＋ 직접 입력…</option>':''}</select>`}
+function liveAdd(sel,key){if(sel.value!=='__add__')return;const v=(prompt('추가할 값을 입력하세요')||'').trim();if(!v){sel.value='';return}if(key==='equipment'){if(!state.equipment.some(e=>e.name===v))state.equipment.push({id:uid('eq'),name:v,category:'기타',type:'지급용',oldPrice:0,normal:0,sample:0,bad:0,note:''})}else if(state.masters[key]&&!state.masters[key].includes(v))state.masters[key].push(v);saveState();const opt=document.createElement('option');opt.value=v;opt.textContent=v;const addOpt=sel.querySelector('option[value="__add__"]');sel.insertBefore(opt,addOpt);sel.value=v;toast('추가되었습니다')}
+function renderClassRows(s){return (s.classes||[]).map((c,i)=>`<div class="class-row"><div class="class-row-head"><span class="badge">${esc(c.label||`${i+1}반`)}</span><button class="btn btn-ghost mini no-print" onclick="deleteClassRow('${s.id}',${i})">삭제</button></div><div class="grid g4">${field('반명',`<input id="cl_label_${i}" value="${esc(c.label||'')}">`)}${field('대상 학년',selectHtml(`cl_grade_${i}`,state.masters.grades,c.grade,'grades'))}${field('메인 강사',`<input id="cl_main_${i}" list="teacherList" value="${esc(c.main||'')}">`)}${field('보조 강사',`<input id="cl_sub_${i}" list="teacherList" value="${esc(c.sub||'')}">`)}${field('교구',selectHtml(`cl_equip_${i}`,state.equipment.map(e=>e.name),c.equip,'equipment'))}${field('주제',selectHtml(`cl_theme_${i}`,state.masters.themes,c.theme,'themes'))}${field('강사연구용 교구발송',selectHtml(`cl_send_${i}`,SEND_OPTIONS,c.equipSend||''))}${field('인원수',`<input type="number" id="cl_count_${i}" value="${esc(c.count??20)}">`)}</div><div class="checkline"><label><input type="checkbox" id="cl_banner_${i}" ${c.banner?'checked':''}> 반별 현수막</label><label><input type="checkbox" id="cl_guide_${i}" ${c.guide?'checked':''}> 교안 발송</label><label><input type="checkbox" id="cl_log_${i}" ${c.log?'checked':''}> 일일출강 교육일지</label></div></div>`).join('')||'<div class="muted">반을 추가해 주세요.</div>'}
+function collectScheduleForm(id){const s=state.schedules.find(x=>x.id===id);s.date=$('sch_date').value;s.region=$('sch_region').value;s.org=$('sch_org').value.trim();s.status=$('sch_status').value;s.period=valueWithAdd('sch_period','periods');s.startTime=$('sch_start').value;s.endTime=$('sch_end').value;s.grade=valueWithAdd('sch_grade','grades');s.company=valueWithAdd('sch_company','companies');s.program=valueWithAdd('sch_program','programs');s.roster=$('sch_roster').value.trim();s.orgInfo={address:$('org_address').value.trim(),manager:$('org_manager').value.trim(),phone:$('org_phone').value.trim(),waitingRoom:$('org_waiting').value.trim(),arrivalTime:$('org_arrival').value.trim(),entry:$('org_entry').value.trim(),parking:$('org_parking').value.trim()};s.classes=(s.classes||[]).map((c,i)=>({label:$(`cl_label_${i}`)?.value||`${i+1}반`,grade:valueWithAdd(`cl_grade_${i}`,'grades'),main:$(`cl_main_${i}`).value.trim(),sub:$(`cl_sub_${i}`).value.trim(),count:Number($(`cl_count_${i}`).value||0),equip:valueWithAdd(`cl_equip_${i}`,'equipment'),theme:valueWithAdd(`cl_theme_${i}`,'themes'),equipSend:$(`cl_send_${i}`).value,banner:$(`cl_banner_${i}`).checked,guide:$(`cl_guide_${i}`).checked,log:($(`cl_log_${i}`)||{}).checked||false}));s.updatedAt=nowStamp();return s}
+function valueWithAdd(id,key){const el=$(id);if(!el)return '';let v=el.value;if(v==='__add__'){v=prompt('추가할 값을 입력하세요')||'';if(v){if(key==='equipment'){if(!state.equipment.some(e=>e.name===v))state.equipment.push({id:uid('eq'),name:v,category:'기타',type:'지급용',oldPrice:0,normal:0,sample:0,bad:0,note:''})}else if(state.masters[key]&&!state.masters[key].includes(v))state.masters[key].push(v)} } return v}
+function saveScheduleForm(id){const oldStatus=state.schedules.find(x=>x.id===id)?.status;const s=collectScheduleForm(id);saveInstitutionFromSchedule(s);if(oldStatus!==s.status){state.statusLog.unshift({id:uid('st'),at:nowStamp(),title:`${s.org} 출강상태 ${oldStatus} → ${s.status}`,memo:s.date});updateTeacherHistory(s,oldStatus)}autoCreateOrUpdateShipment(s);saveState();toast('출강일정이 저장되었습니다');render()}
+function deleteSchedule(id){if(!confirm('이 출강일정을 삭제할까요? 연결된 발송신청서는 유지됩니다.'))return;state.schedules=state.schedules.filter(x=>x.id!==id);activeScheduleId=null;saveState();toast('삭제되었습니다');render()}
+function saveInstitutionFromSchedule(s){if(!s.org)return;let o=orgByName(s.org);const daily={date:s.date,org:s.org,...s.orgInfo};if(!o){o={id:uid('org'),name:s.org,address:s.orgInfo.address||'',manager:s.orgInfo.manager||'',phone:s.orgInfo.phone||'',parking:s.orgInfo.parking||'',entry:s.orgInfo.entry||'',memo:'',daily:[]};state.orgs.push(o)}else{if(o.daily?.some(d=>d.date===s.date)){if(confirm('같은 날짜와 같은 기관의 기관정보가 있습니다. 기존 기관정보를 업데이트할까요?')){o.daily=o.daily.map(d=>d.date===s.date?daily:d)}}else{o.daily=o.daily||[];o.daily.push(daily)}['address','manager','phone','parking','entry'].forEach(k=>{if(s.orgInfo[k])o[k]=s.orgInfo[k]})}}
+function loadOrgInfoToForm(){const name=$('sch_org').value.trim();const o=orgByName(name);if(!o)return; if(!$('org_address').value)$('org_address').value=o.address||''; if(!$('org_manager').value)$('org_manager').value=o.manager||''; if(!$('org_phone').value)$('org_phone').value=o.phone||''; if(!$('org_parking').value)$('org_parking').value=o.parking||''; if(!$('org_entry').value)$('org_entry').value=o.entry||'';}
+function addClassRow(id){collectScheduleForm(id);const s=state.schedules.find(x=>x.id===id);s.classes.push({label:`${s.classes.length+1}반`,grade:s.grade||'',main:'',sub:'',equip:'',count:20,theme:'',equipSend:'',banner:false,guide:false,log:false});renderScheduleForm(id)}
+function deleteClassRow(id,i){collectScheduleForm(id);const s=state.schedules.find(x=>x.id===id);s.classes.splice(i,1);renderScheduleForm(id)}
+function toggleScheduleCheck(id,ci,checked){const s=state.schedules.find(x=>x.id===id);const item=state.checklist.items[ci];if(item===undefined)return;s.checks=s.checks||{prep:[]};s.checks.prep=s.checks.prep||[];if(checked&&!s.checks.prep.includes(item))s.checks.prep.push(item);if(!checked)s.checks.prep=s.checks.prep.filter(x=>x!==item);saveState()}
+function openChecklistEdit(){openModal(`<h3>출강 체크리스트 항목 관리</h3><p class="muted">모든 출강일정에 공통으로 적용되는 체크리스트 항목입니다. 수정·삭제하거나 새 항목을 추가하세요.</p><div id="chkList">${checklistEditRows()}</div><div class="addr-row" style="margin-top:10px"><input id="chk_new" placeholder="새 체크 항목"><button class="btn btn-navy" onclick="addChecklistItem()">＋ 추가</button></div><div class="modal-actions"><button class="btn btn-navy" onclick="closeModal();if(activeScheduleId)renderScheduleForm(activeScheduleId)">완료</button></div>`)}
+function checklistEditRows(){return state.checklist.items.map((t,i)=>`<div class="addr-row" style="margin-bottom:6px"><input value="${esc(t)}" onchange="editChecklistItem(${i},this.value)"><button class="btn btn-ghost mini" onclick="removeChecklistItem(${i})">✖</button></div>`).join('')||'<div class="muted">항목이 없습니다.</div>'}
+function editChecklistItem(i,v){v=v.trim();if(!v){removeChecklistItem(i);return}state.checklist.items[i]=v;saveState()}
+function removeChecklistItem(i){if(!confirm(`"${state.checklist.items[i]}" 항목을 삭제할까요?`))return;state.checklist.items.splice(i,1);saveState();$('chkList').innerHTML=checklistEditRows()}
+function addChecklistItem(){const v=($('chk_new').value||'').trim();if(!v)return toast('항목을 입력하세요');if(state.checklist.items.includes(v))return toast('이미 있는 항목입니다');state.checklist.items.push(v);saveState();$('chk_new').value='';$('chkList').innerHTML=checklistEditRows();toast('추가되었습니다')}
+function noticeStatusBlock(s){return ['first','final','after'].map(k=>`<span class="pill ${s.notice?.[k]==='발송완료'?'green':'yellow'}">${{first:'최초공지',final:'출강 전 최종안내',after:'출강 후 안내'}[k]} : ${s.notice?.[k]||'미발송'}</span>`).join(' ')}
+function updateTeacherHistory(s,oldStatus){const names=[...new Set((s.classes||[]).map(c=>c.main).filter(Boolean))];names.forEach(name=>{if(s.status==='출강완료'&&oldStatus!=='출강완료'){state.teacherHistory.push({id:uid('hist'),teacher:name,date:s.date,org:s.org,program:s.program,scheduleId:s.id})}if(oldStatus==='출강완료'&&s.status!=='출강완료'){state.teacherHistory=state.teacherHistory.filter(h=>!(h.scheduleId===s.id&&h.teacher===name))}})}
+function autoCreateOrUpdateShipment(s){if(!s.id||s.legacy)return;let ship=state.shipments.find(x=>x.scheduleId===s.id);if(!ship){ship=createShipmentObject(s);state.shipments.unshift(ship)}else if(['발송완료','배송완료','수령확인'].includes(ship.status)){if(confirm('이미 발송완료 이상 상태의 신청서입니다. 출강일정 수정 내용을 발송신청서에도 반영하시겠습니까?'))mergeShipmentWithSchedule(ship,s)}else mergeShipmentWithSchedule(ship,s)}
+function createShipmentObject(s){return {id:uid('ship'),scheduleId:s.id,name:`${s.date}_${s.org}_교구발송`,date:s.date,org:s.org,program:s.program,status:'미발송',courier:'',invoice:'',shipDate:'',direct:{person:'',date:'',place:'',memo:''},stockApplied:false,mailNotice:'미발송',kakaoNotice:'미발송',items:shipmentItemsFromSchedule(s),createdAt:nowStamp(),updatedAt:nowStamp(),logs:[]}}
+function shipmentItemsFromSchedule(s){return (s.classes||[]).filter(c=>c.main&&c.equip).map((c,i)=>{const teacher=instructorByName(c.main);return {id:uid('item'),classLabel:c.label||`${i+1}반`,teacher:c.main,equip:c.equip,shipQty:1,stockType:'normal',history:hasEquipHistory(c.main,c.equip),infoMissing:!teacher||!teacher.phone||!teacher.address||!teacher.zip,manual:false,reapproved:false,reapproveReason:''}})}
+function mergeShipmentWithSchedule(ship,s){const manual=(ship.items||[]).filter(it=>it.manual);ship.date=s.date;ship.org=s.org;ship.program=s.program;const generated=shipmentItemsFromSchedule(s);ship.items=[...generated,...manual];ship.updatedAt=nowStamp()}
+function hasEquipHistory(teacher,equip){return state.shipments.some(sh=>['발송완료','배송완료','수령확인'].includes(sh.status)&&sh.items?.some(it=>it.teacher===teacher&&it.equip===equip))}
+function createShipmentFromSchedule(id){const s=state.schedules.find(x=>x.id===id);if(!s)return;let ship=state.shipments.find(x=>x.scheduleId===id);if(ship){mergeShipmentWithSchedule(ship,s);activeShipmentId=ship.id;view='logistics'}else{ship=createShipmentObject(s);state.shipments.unshift(ship);activeShipmentId=ship.id;view='logistics'}saveState();toast('교구발송 신청서가 생성되었습니다');render()}
+function renderLogistics(){setTitle('교구물류',`<button class="btn btn-ghost" onclick="exportCSV('shipments')">엑셀/CSV</button>`);if(activeShipmentId)return renderShipmentDetail(activeShipmentId);const rows=state.shipments.map(sh=>[fmtDate(sh.date),esc(sh.org),esc(sh.name),statusPill(sh.status),guideNoticePill(sh),`<button class="btn btn-ghost mini" onclick="activeShipmentId='${sh.id}';render()">열기</button>`]);$('app').innerHTML=`<div class="card"><h3>📦 교구발송 신청서 목록</h3>${rows.length?table(['출강일','기관','신청서명','발송상태','안내상태','관리'],rows):'<div class="muted">교구발송 신청서가 없습니다.</div>'}</div>`}
+function guideNoticePill(sh){return `<span class="pill ${(sh.mailNotice==='발송완료'||sh.kakaoNotice==='발송완료')?'green':'yellow'}">${(sh.mailNotice==='발송완료'||sh.kakaoNotice==='발송완료')?'발송 안내 완료':'발송 안내 미완료'}</span>`}
+function renderShipmentDetail(id){const sh=state.shipments.find(x=>x.id===id);if(!sh){activeShipmentId=null;return renderLogistics()}setTitle('교구물류 상세',`<button class="btn btn-ghost" onclick="activeShipmentId=null;render()">← 목록</button><button class="btn btn-navy" onclick="saveShipmentForm('${id}')">저장</button><button class="btn btn-gold" onclick="printShipment('${id}')">A4/PDF</button>`);$('app').innerHTML=`<div class="print-head print-only"><b>[ENK LAB] 교구 발송 신청서</b> · ${esc(sh.org)} · ${fmtDate(sh.date)}</div><div class="card"><h3>발송 기본정보</h3><div class="grid g12"><div class="grid-sub">발송 정보</div>${field('신청서명',`<input id="ship_name" value="${esc(sh.name)}">`,'c6')}${field('기관명',`<input id="ship_org" value="${esc(sh.org)}">`,'c3')}${field('출강일',`<input type="date" id="ship_date" value="${esc(sh.date)}">`,'c3')}<div class="grid-sub">상태 · 배송</div>${field('상태',selectHtml('ship_status',SHIP_STATUS,sh.status),'c4')}${field('발송일',`<input type="date" id="ship_shipDate" value="${esc(sh.shipDate)}">`,'c4')}${field('택배사',selectHtml('ship_courier',state.masters.couriers,sh.courier,'couriers'),'c4')}${field('송장번호',`<input id="ship_invoice" value="${esc(sh.invoice)}">`,'c12')}</div><div id="directFields" class="grid g12" style="margin-top:12px"><div class="grid-sub">직접전달 / 현장전달 정보</div>${field('전달자',`<input id="dir_person" value="${esc(sh.direct?.person||'')}">`,'c4')}${field('전달일',`<input type="date" id="dir_date" value="${esc(sh.direct?.date||'')}">`,'c4')}${field('전달 장소',`<input id="dir_place" value="${esc(sh.direct?.place||'')}">`,'c4')}${field('비고',`<input id="dir_memo" value="${esc(sh.direct?.memo||'')}">`,'c12')}</div><p class="muted">직접전달/현장전달은 배송완료 단계를 건너뛰고 수령확인으로 변경할 수 있습니다.</p></div>
+<div class="card"><h3>반별 상세표</h3>${shipmentItemsTable(sh)}<div class="toolbar"><button class="btn btn-ghost mini" onclick="addManualShipmentItem('${id}')">＋ 발송 대상 추가</button></div><p class="muted">※ 강사 연구용 교구는 <b>해당 교구 첫 수업 시 1회, 1개만</b> 지급됩니다. 이미 지급 이력이 있으면 자동으로 제외되며, 필요 시 재발송 승인으로만 추가됩니다.</p></div>
+<div class="card"><h3>실제 발송 요약표</h3>${shipmentSummaryTable(sh)}</div>
+<div class="card"><h3>발송 안내</h3><div class="toolbar"><button class="btn btn-ghost" onclick="prepareMailNotice('${id}')">네이버 메일 열기/본문 복사</button><button class="btn btn-ghost" onclick="prepareKakaoShipNotice('${id}')">카톡 안내 복사</button></div>${guideNoticePill(sh)} <span class="pill">메일 ${sh.mailNotice}</span> <span class="pill">카톡 ${sh.kakaoNotice}</span></div>
+<div class="card"><h3>상태 변경 로그</h3>${(sh.logs||[]).map(l=>`<div class="list-item"><span>${esc(l.at)} / ${esc(l.text)}</span><span class="muted">${esc(l.memo||'')}</span></div>`).join('')||'<div class="muted">로그가 없습니다.</div>'}</div>`;toggleDirectFields()}
+function shipmentItemsTable(sh){const rows=(sh.items||[]).map((it,i)=>[esc(it.classLabel),esc(it.teacher),esc(it.equip),'1',it.history&&!it.reapproved?'<span class="pill yellow">지급이력 있음</span>':(it.infoMissing?'<span class="pill red">강사정보 미완성</span>':'<span class="pill green">발송 필요</span>'),`${it.history&&!it.reapproved?`<button class="btn btn-blue mini" onclick="reapproveItem('${sh.id}',${i})">재발송 승인</button>`:''} <button class="btn btn-ghost mini" onclick="deleteShipItem('${sh.id}',${i})">삭제</button>`]);return table(['반','강사','교구','발송수량','확인','관리'],rows)}
+function activeShipItems(sh){return (sh.items||[]).filter(it=>!(it.history&&!it.reapproved))}
+function shipmentSummary(sh){const m={};activeShipItems(sh).forEach(it=>{const key=it.teacher+'|'+it.equip;if(!m[key])m[key]={teacher:it.teacher,equip:it.equip,qty:1,stockType:it.stockType||'normal'}});return Object.values(m)}
+function shipmentSummaryTable(sh){const list=shipmentSummary(sh);return list.length?table(['강사','교구','실제 발송수량','현재재고'],list.map(x=>[esc(x.teacher),esc(x.equip),x.qty,getStock(x.equip,x.stockType)]),['l','l','r','r']):'<div class="muted">실제 발송 대상이 없습니다. (전원 지급이력 보유 또는 미배정)</div>'}
+function deleteShipItem(id,i){const sh=state.shipments.find(x=>x.id===id);if(confirm('발송 대상에서 삭제할까요?')){sh.items.splice(i,1);renderShipmentDetail(id)}}
+function addManualShipmentItem(id){const sh=state.shipments.find(x=>x.id===id);sh.items.push({id:uid('item'),classLabel:'수동추가',teacher:'',equip:'',shipQty:1,stockType:'normal',history:false,infoMissing:true,manual:true});renderShipmentDetail(id)}
+function reapproveItem(id,i){const reason=prompt('재발송 사유를 입력하세요\n예: 분실 / 파손 / 추가 연구용 / 다른 차시 준비 / 기타')||'';const sh=state.shipments.find(x=>x.id===id);sh.items[i].reapproved=true;sh.items[i].reapproveReason=reason;sh.logs=sh.logs||[];sh.logs.unshift({at:nowStamp(),text:`${sh.items[i].teacher} / ${sh.items[i].equip} 재발송 승인`,memo:reason});saveState();renderShipmentDetail(id)}
+function saveShipmentForm(id){const sh=state.shipments.find(x=>x.id===id);const old=sh.status;sh.name=$('ship_name').value;sh.date=$('ship_date').value;sh.org=$('ship_org').value;sh.courier=valueWithAdd('ship_courier','couriers');sh.invoice=$('ship_invoice').value;sh.shipDate=$('ship_shipDate').value;sh.direct={person:$('dir_person').value,date:$('dir_date').value,place:$('dir_place').value,memo:$('dir_memo').value};const next=$('ship_status').value;if(next==='발송완료'&&!sh.invoice&&!['직접전달','현장전달'].includes(sh.courier)&&!confirm('송장번호가 입력되지 않았습니다. 그래도 발송완료 처리할까요?'))return;if(next==='발송완료'&&!sh.stockApplied){const lacking=shipmentSummary(sh).filter(x=>getStock(x.equip,x.stockType)<x.qty);if(lacking.length&&!confirm('현재 재고보다 신청 수량이 많습니다. 그래도 발송완료 처리할까요?'))return;applyShipmentStock(sh,-1);sh.stockApplied=true}if(old==='발송완료'&&next==='미발송'&&sh.stockApplied){applyShipmentStock(sh,1);sh.stockApplied=false}if(old!==next){sh.logs=sh.logs||[];sh.logs.unshift({at:nowStamp(),text:`${old} → ${next}`,memo:sh.invoice?'송장번호 '+sh.invoice:''});state.statusLog.unshift({id:uid('st'),at:nowStamp(),title:`${sh.org} / ${sh.name} ${old} → ${next}`,memo:sh.invoice||''})}sh.status=next;sh.updatedAt=nowStamp();saveState();toast('발송신청서가 저장되었습니다');renderShipmentDetail(id)}
+function applyShipmentStock(sh,dir){shipmentSummary(sh).forEach(x=>changeStock(x.equip,x.stockType,dir*x.qty,dir<0?'발송차감':'상태복구',{org:sh.org,teacher:x.teacher}))}
+function toggleDirectFields(){const c=$('ship_courier');if(!c)return;const show=['직접전달','현장전달'].includes(c.value);$('directFields').style.display=show?'grid':'none';c.addEventListener('change',()=>{const s=['직접전달','현장전달'].includes(c.value);$('directFields').style.display=s?'grid':'none'})}
+function courierLink(sh){const q=encodeURIComponent((sh.courier||'')+' '+(sh.invoice||''));return `https://search.naver.com/search.naver?query=${q}`}
+function prepareMailNotice(id){const sh=state.shipments.find(x=>x.id===id);const body=shipNoticeText(sh);copyText(body);const subj=encodeURIComponent('[ENK LAB] 출강 교구 발송 안내');const mailBody=encodeURIComponent(body);window.open(`https://mail.naver.com/write/popup?subject=${subj}&body=${mailBody}`,'_blank');if(confirm('안내 문구가 준비되었습니다. 발송완료로 변경할까요?')){sh.mailNotice='발송완료';saveState();renderShipmentDetail(id)}}
+function prepareKakaoShipNotice(id){const sh=state.shipments.find(x=>x.id===id);copyText(shipNoticeText(sh));if(confirm('안내 문구가 준비되었습니다. 발송완료로 변경할까요?')){sh.kakaoNotice='발송완료';saveState();renderShipmentDetail(id)}}
+function shipNoticeText(sh){const items=shipmentSummary(sh).map(x=>`- ${x.equip} ${x.qty}개`).join('\n');return `안녕하세요. ENK LAB입니다.\n${fmtDate(sh.date)} ${sh.org} 출강 교구 발송 안내드립니다.\n\n택배사 : ${sh.courier||'추후 안내 예정'}\n송장번호 : ${sh.invoice||'추후 안내 예정'}\n배송조회 : ${sh.invoice?courierLink(sh):'추후 안내 예정'}\n\n교구목록\n${items}\n\n감사합니다.\nENK LAB`}
+function renderEquipment(){setTitle('교구·재고관리',`<button class="btn btn-navy" onclick="addEquipmentModal()">＋ 교구 추가</button><button class="btn btn-ghost" onclick="exportCSV('equipment')">엑셀/CSV</button>`);const rows=state.equipment.map((e,i)=>[esc(e.name),esc(e.category),esc(e.type),(e.normal<0?'<span class="danger-text">'+e.normal+'</span>':e.normal),e.sample,e.bad,`<button class="btn btn-ghost mini" onclick="stockInModal('${e.id}')">입고</button> <button class="btn btn-ghost mini" onclick="editEquipmentModal('${e.id}')">수정</button>`]);$('app').innerHTML=`<div class="card"><h3>📚 교구·재고 현황</h3>${table(['교구','카테고리','유형','정상재고','샘플재고','불량재고','관리'],rows,['l','l','l','r','r','r','l'])}</div>`}
+function addEquipmentModal(){openModal(`<h3>교구 추가</h3><div class="grid g2">${field('교구명','<input id="eq_name">')}${field('카테고리',selectHtml('eq_cat',['아트고','로봇','AI융합'],'아트고'))}${field('유형',selectHtml('eq_type',['지급용','회수용','샘플교구'],'지급용'))}</div><div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">취소</button><button class="btn btn-navy" onclick="saveNewEquipment()">저장</button></div>`)}
+function saveNewEquipment(){const name=$('eq_name').value.trim();if(!name)return toast('교구명을 입력하세요');state.equipment.push({id:uid('eq'),name,category:$('eq_cat').value,type:$('eq_type').value,oldPrice:0,normal:0,sample:0,bad:0,note:''});closeModal();renderEquipment()}
+function editEquipmentModal(id){const e=state.equipment.find(x=>x.id===id);openModal(`<h3>교구 수정</h3><div class="grid g2">${field('교구명',`<input id="eq_name" value="${esc(e.name)}">`)}${field('카테고리',selectHtml('eq_cat',['아트고','로봇','AI융합'],e.category))}${field('유형',selectHtml('eq_type',['지급용','회수용','샘플교구'],e.type))}${field('정상재고',`<input type="number" id="eq_normal" value="${e.normal}">`)}${field('샘플재고',`<input type="number" id="eq_sample" value="${e.sample}">`)}${field('불량재고',`<input type="number" id="eq_bad" value="${e.bad}">`)}</div><p class="muted">기존 정산용 단가는 내부 보존값입니다: ${e.oldPrice||0}원</p><div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">취소</button><button class="btn btn-navy" onclick="saveEquipmentEdit('${id}')">저장</button></div>`)}
+function saveEquipmentEdit(id){const e=state.equipment.find(x=>x.id===id);e.name=$('eq_name').value.trim();e.category=$('eq_cat').value;e.type=$('eq_type').value;e.normal=Number($('eq_normal').value||0);e.sample=Number($('eq_sample').value||0);e.bad=Number($('eq_bad').value||0);closeModal();renderEquipment()}
+function stockInModal(id){const e=state.equipment.find(x=>x.id===id);openModal(`<h3>입고 처리 - ${esc(e.name)}</h3><div class="grid g2">${field('재고구분',selectHtml('stock_type',['normal','sample'],'normal'))}${field('입고수량','<input type="number" id="stock_qty" value="1">')}${field('메모','<input id="stock_memo" value="입고">')}</div><div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">취소</button><button class="btn btn-navy" onclick="saveStockIn('${id}')">입고 처리</button></div>`)}
+function saveStockIn(id){const e=state.equipment.find(x=>x.id===id);changeStock(e.name,$('stock_type').value,Number($('stock_qty').value||0),$('stock_memo').value);closeModal();renderEquipment()}
+function returnList(){const out=[];state.shipments.forEach(sh=>{shipmentSummary(sh).filter(x=>equipByName(x.equip)?.type==='회수용'||x.stockType==='sample').forEach(x=>{const rid=sh.id+'_'+x.teacher+'_'+x.equip;const st=state.returnStatus[rid]||{status:'반납예정',at:''};out.push({id:rid,teacher:x.teacher,equip:x.equip,org:sh.org,due:sh.date?nextWeekday(addDays(sh.date,7)):'',status:st.status,at:st.at})})});return out}
+function overdueReturns(){const d=today();return returnList().filter(r=>r.due&&r.due<d&&r.status!=='반납완료')}
+function setReturnStatus(rid,status){state.returnStatus[rid]={status,at:status==='반납완료'?nowStamp():''};state.tasks=state.tasks.filter(t=>t.id!=='ret_'+rid);saveState();renderReturns()}
+function renderReturns(){setTitle('반납·불량관리');const rows=returnList().map(r=>[esc(r.teacher),esc(r.equip),esc(r.org),fmtDate(r.due),`<select onchange="setReturnStatus('${r.id}',this.value)">${RETURN_STATUS.map(s=>`<option value="${s}" ${s===r.status?'selected':''}>${s}</option>`).join('')}</select>`,r.at?`<span class="muted">${esc(r.at)}</span>`:'']);$('app').innerHTML=`<div class="card"><h3>🔁 반납관리</h3>${rows.length?table(['강사','교구','기관','반납기한','상태','완료시각'],rows,['l','l','l','c','l','l']):'<div class="muted">반납 대상이 없습니다. (회수용/샘플 교구 발송 시 표시됩니다)</div>'}</div><div class="card"><h3>🚫 불량재고 등록</h3><div class="grid g4">${field('교구',selectHtml('bad_equip',state.equipment.map(e=>e.name),''))}${field('수량','<input type="number" id="bad_qty" value="1">')}${field('사유',selectHtml('bad_reason',BAD_REASONS,'작동불량'))}${field('메모','<input id="bad_memo">')}</div><div class="toolbar"><button class="btn btn-red" onclick="moveBadStock()">불량재고로 이동</button><button class="btn btn-green" onclick="restoreBadStock()">정상재고로 복구</button></div></div>`}
+function moveBadStock(){const eq=$('bad_equip').value,qty=Number($('bad_qty').value||0);if(!eq)return toast('교구를 선택하세요');changeStock(eq,'normal',-qty,'불량재고 이동: '+$('bad_reason').value);changeStock(eq,'bad',qty,$('bad_memo').value||'불량등록');renderReturns()}
+function restoreBadStock(){const eq=$('bad_equip').value,qty=Number($('bad_qty').value||0);if(!eq)return toast('교구를 선택하세요');changeStock(eq,'bad',-qty,'정상재고 복구');changeStock(eq,'normal',qty,$('bad_memo').value||'정상재고 복구');renderReturns()}
+function renderInstructors(){setTitle('강사관리',`<button class="btn btn-navy" onclick="editInstructorModal()">＋ 강사 추가</button><button class="btn btn-ghost" onclick="exportCSV('instructors')">엑셀/CSV</button>`);const rows=state.instructors.map(t=>[esc(t.name),esc(t.org),t.phone?esc(t.phone):'<span class="danger-text">없음</span>',esc(t.email||''),esc(t.address||''),esc(t.zip||''),`<button class="btn btn-ghost mini" onclick="editInstructorModal('${t.id}')">수정</button>`]);$('app').innerHTML=`<div class="card"><h3>👩‍🏫 강사정보</h3>${table(['강사명','소속','연락처','메일','주소','우편번호','관리'],rows)}</div><div class="card"><h3>CSV 가져오기</h3><p class="muted">강사명,연락처,메일주소,주소,상세주소,우편번호,메모</p><input type="file" accept=".csv" onchange="importCSV(event,'instructors')"></div>`}
+function editInstructorModal(id){const t=id?state.instructors.find(x=>x.id===id):{id:'',name:'',org:'',phone:'',email:'',address:'',detailAddress:'',zip:'',memo:''};openModal(`<h3>${id?'강사 수정':'강사 추가'}</h3><div class="grid g12"><div class="grid-sub">기본</div>${field('강사명',`<input id="t_name" value="${esc(t.name)}">`,'c4')}${field('소속',`<input id="t_org" value="${esc(t.org)}">`,'c4')}${field('연락처',`<input id="t_phone" value="${esc(t.phone)}">`,'c4')}<div class="grid-sub">주소</div>${field('주소',`<div class="addr-row"><input id="t_address" value="${esc(t.address)}">${mapBtn('t_address')}</div>`,'c6')}${field('우편번호',`<input id="t_zip" value="${esc(t.zip)}">`,'c3')}${field('상세주소',`<input id="t_detail" value="${esc(t.detailAddress)}">`,'c3')}<div class="grid-sub">기타</div>${field('메일주소',`<input id="t_email" value="${esc(t.email)}">`,'c6')}${field('메모',`<input id="t_memo" value="${esc(t.memo)}">`,'c6')}</div><div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">취소</button><button class="btn btn-navy" onclick="saveInstructorModal('${id||''}')">저장</button></div>`)}
+function saveInstructorModal(id){const obj={id:id||uid('t'),name:$('t_name').value.trim(),org:$('t_org').value.trim(),phone:$('t_phone').value.trim(),email:$('t_email').value.trim(),address:$('t_address').value.trim(),detailAddress:$('t_detail').value.trim(),zip:$('t_zip').value.trim(),memo:$('t_memo').value.trim()};if(!obj.name)return toast('강사명을 입력하세요');const idx=state.instructors.findIndex(x=>x.id===id);if(idx>=0)state.instructors[idx]=obj;else state.instructors.push(obj);closeModal();renderInstructors()}
+function renderOrgs(){setTitle('기관관리',`<button class="btn btn-navy" onclick="editOrgModal()">＋ 기관 추가</button><button class="btn btn-ghost" onclick="exportCSV('orgs')">엑셀/CSV</button>`);const rows=state.orgs.map(o=>[esc(o.name),esc(o.manager||''),esc(o.phone||''),esc(o.address||''),esc(o.parking||''),`<button class="btn btn-ghost mini" onclick="editOrgModal('${o.id}')">수정</button>`]);$('app').innerHTML=`<div class="card"><h3>🏫 기관정보</h3>${table(['기관명','담당자','연락처','주소','주차','관리'],rows)}</div><div class="card"><h3>CSV 가져오기</h3><p class="muted">기관명,담당자명,연락처,주소,메모</p><input type="file" accept=".csv" onchange="importCSV(event,'orgs')"></div>`}
+function editOrgModal(id){const o=id?state.orgs.find(x=>x.id===id):{id:'',name:'',manager:'',phone:'',address:'',parking:'',entry:'',memo:''};openModal(`<h3>${id?'기관 수정':'기관 추가'}</h3><div class="grid g12"><div class="grid-sub">기관 · 담당자</div>${field('기관명',`<input id="o_name" value="${esc(o.name)}">`,'c4')}${field('담당자명',`<input id="o_manager" value="${esc(o.manager)}">`,'c4')}${field('연락처',`<input id="o_phone" value="${esc(o.phone)}">`,'c4')}<div class="grid-sub">주소 · 현장</div>${field('주소',`<div class="addr-row"><input id="o_address" value="${esc(o.address)}">${mapBtn('o_address')}</div>`,'c12')}${field('주차안내',`<textarea id="o_parking">${esc(o.parking)}</textarea>`,'c6')}${field('출입방법',`<textarea id="o_entry">${esc(o.entry)}</textarea>`,'c6')}</div><div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">취소</button><button class="btn btn-navy" onclick="saveOrgModal('${id||''}')">저장</button></div>`)}
+function saveOrgModal(id){const obj={id:id||uid('org'),name:$('o_name').value.trim(),manager:$('o_manager').value.trim(),phone:$('o_phone').value.trim(),address:$('o_address').value.trim(),parking:$('o_parking').value.trim(),entry:$('o_entry').value.trim(),memo:''};if(!obj.name)return toast('기관명을 입력하세요');const idx=state.orgs.findIndex(x=>x.id===id);if(idx>=0)state.orgs[idx]={...state.orgs[idx],...obj};else state.orgs.push(obj);closeModal();renderOrgs()}
+function renderGuides(){setTitle('교안 발송관리');syncGuideSends();const rows=state.guideSends.map(g=>[fmtDate(g.date),esc(g.org),esc(g.teacher),selectHtml(`g_status_${g.id}`,['미발송','발송완료'],g.status),selectHtml(`g_method_${g.id}`,['메일','카톡','문자','직접전달','기타'],g.method||''),`<button class="btn btn-navy mini" onclick="saveGuide('${g.id}')">저장</button>`]);$('app').innerHTML=`<div class="card"><h3>📨 강사별 교안 발송관리</h3>${rows.length?table(['출강일','기관','강사','상태','발송방법','관리'],rows):'<div class="muted">교안 발송 대상이 없습니다. (반 구성에서 교안 발송 체크 시 표시됩니다)</div>'}</div>`}
+function syncGuideSends(){state.schedules.forEach(s=>{(s.classes||[]).forEach(c=>{if(c.guide&&c.main&&!state.guideSends.some(g=>g.scheduleId===s.id&&g.teacher===c.main)){state.guideSends.push({id:uid('guide'),scheduleId:s.id,date:s.date,org:s.org,teacher:c.main,status:'미발송',method:'카톡',sentAt:'',memo:''})}})})}
+function saveGuide(id){const g=state.guideSends.find(x=>x.id===id);g.status=$(`g_status_${id}`).value;g.method=$(`g_method_${id}`).value;if(g.status==='발송완료'&&!g.sentAt)g.sentAt=nowStamp();saveState();toast('교안 발송상태가 저장되었습니다');renderGuides()}
+function renderKakao(){setTitle('카톡 공지관리');const rows=state.schedules.map(s=>[fmtDate(s.date),esc(s.org),noticeStatusBlock(s),`<button class="btn btn-ghost mini" onclick="copyKakaoNotice('${s.id}','first')">최초</button> <button class="btn btn-ghost mini" onclick="copyKakaoNotice('${s.id}','final')">최종</button> <button class="btn btn-ghost mini" onclick="copyKakaoNotice('${s.id}','after')">출강후</button>`]);$('app').innerHTML=`<div class="card"><h3>💬 출강별 카톡공지</h3>${rows.length?table(['출강일','기관','공지상태','복사'],rows):'<div class="muted">출강일정이 없습니다.</div>'}</div><div class="card"><h3>템플릿 관리</h3><div class="grid g3">${field('강사 단톡방 최초공지',`<textarea id="tpl_first">${esc(state.settings.kakaoTemplates.first)}</textarea>`)}${field('출강 전 최종안내',`<textarea id="tpl_final">${esc(state.settings.kakaoTemplates.final)}</textarea>`)}${field('출강 후 안내',`<textarea id="tpl_after">${esc(state.settings.kakaoTemplates.after)}</textarea>`)}</div><div class="toolbar"><button class="btn btn-navy" onclick="saveTemplates()">템플릿 저장</button><button class="btn btn-ghost" onclick="restoreTemplates()">기본 템플릿으로 복원</button></div><p class="muted">사용 가능 변수: {출강일}, {기관명}, {프로그램명}, {수업시간}, {강사명단}, {반별배정}, {교구목록}, {대기실도착시간}, {대기실장소}, {기관주소}, {주차안내}, {담당자명}, {담당자연락처}, {출입방법}, {교육일지마감}, {강사료청구서마감}</p><p class="muted">※ 공지에는 학생 인원·강사 배정·교구명만 포함되며, 교구 단가·정산 금액 등 재무정보는 포함되지 않습니다.</p></div>`}
+function saveTemplates(){state.settings.kakaoTemplates.first=$('tpl_first').value;state.settings.kakaoTemplates.final=$('tpl_final').value;state.settings.kakaoTemplates.after=$('tpl_after').value;saveState();toast('템플릿이 저장되었습니다')}
+function restoreTemplates(){if(confirm('기본 템플릿으로 복원할까요?')){state.settings.kakaoTemplates=defaultTemplates();saveState();renderKakao()}}
+function copyKakaoNotice(id,type){const s=state.schedules.find(x=>x.id===id);const text=applyTemplate(state.settings.kakaoTemplates[type],s);copyText(text);if(confirm('공지 문구가 복사되었습니다. 실제로 단톡방에 발송하셨나요?')){s.notice=s.notice||{first:'미발송',final:'미발송',after:'미발송'};s.notice[type]='발송완료';saveState();render()}}
+function applyTemplate(t,s){const classes=(s.classes||[]).map(c=>`${c.label}(${c.grade||''}) - 메인 ${c.main||'미정'}${c.sub?` / 보조 ${c.sub}`:''}${c.equip?` / 교구 ${c.equip}`:''}`).join('\n')||'OOO';const equips=[...new Set((s.classes||[]).map(c=>c.equip).filter(Boolean))].join(', ')||'OOO';const time=[s.period,s.startTime&&s.endTime?`${s.startTime}~${s.endTime}`:''].filter(Boolean).join(' · ')||'OOO';const org=s.orgInfo||{};const journal=s.date?nextWeekday(addDays(s.date,3)):'';const fee=s.date?nextWeekday(monthEnd(s.date)):'';const vars={'{출강일}':fmtDate(s.date)||'O월 O일','{기관명}':s.org||'OOO','{프로그램명}':s.program||'OOO','{수업시간}':time,'{강사명단}':s.roster||'OOO','{반별배정}':classes,'{교구목록}':equips,'{대기실도착시간}':org.arrivalTime||'오전 OO:OO','{대기실장소}':org.waitingRoom||'OOOO / 강사 대기실','{기관주소}':org.address||'OOO','{주차안내}':org.parking||'OOO','{담당자명}':org.manager||'OOO','{담당자연락처}':org.phone||'OOO','{출입방법}':org.entry||'OOO','{교육일지마감}':fmtDate(journal),'{강사료청구서마감}':fmtDate(fee)};let out=t;Object.entries(vars).forEach(([k,v])=>out=out.split(k).join(v));return out}
+function copyText(text){if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(text).then(()=>toast('복사되었습니다')).catch(()=>fallbackCopy(text));else fallbackCopy(text)}
+function fallbackCopy(text){const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('복사되었습니다')}catch(e){prompt('아래 내용을 복사하세요',text)}ta.remove()}
+function renderHistory(){setTitle('이력·구글시트 전송',`<button class="btn btn-ghost" onclick="exportCSV('history')">이력 CSV</button>`);$('app').innerHTML=`<div class="card"><h3>강사 출강이력</h3>${table(['강사','출강일','기관','프로그램'],state.teacherHistory.map(h=>[esc(h.teacher),fmtDate(h.date),esc(h.org),esc(h.program)]))}</div><div class="card"><h3>재고변동 로그</h3>${table(['일시','교구','구분','수량','처리후','메모'],state.inventoryLog.slice(0,200).map(l=>[esc(l.at),esc(l.equip),esc(l.type),l.delta,l.after,esc(l.memo)]),['l','l','l','r','r','l'])}</div><div class="card"><h3>구글시트 탭별 전송</h3><div class="checkline">${['출강일정','교구발송','재고현황','강사정보','강사출강이력'].map(x=>`<label><input type="checkbox" class="gsTab" value="${x}" checked> ${x}</label>`).join('')}</div><div class="toolbar"><button class="btn btn-navy" onclick="sendSelectedToSheet()">선택 탭 전송</button><button class="btn btn-ghost" onclick="showAppsScript()">Apps Script 코드 보기</button></div><p class="muted">전송 시 날짜_시간_탭명 형식으로 새 시트가 생성됩니다.</p></div>`}
+function sendSelectedToSheet(){const url=state.settings.gasUrl;if(!url)return alert('설정에서 Google Apps Script URL을 입력해 주세요.');const tabs=[...document.querySelectorAll('.gsTab:checked')].map(x=>x.value);const payload={pin:state.settings.gasPin||state.settings.pin,createdAt:nowStamp(),tabs:{}};tabs.forEach(t=>payload.tabs[t]=sheetData(t));fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)}).then(()=>toast('구글시트 전송 요청이 완료되었습니다')).catch(e=>alert('전송 실패: '+e))}
+function sheetData(tab){if(tab==='출강일정')return state.schedules;if(tab==='교구발송')return state.shipments;if(tab==='재고현황')return state.equipment;if(tab==='강사정보')return state.instructors;if(tab==='강사출강이력')return state.teacherHistory;return []}
+function masterEditor(key,label){const items=state.masters[key]||[];return `<div class="field"><label>${esc(label)}</label><div class="mchips" id="mp_${key}">${items.map((v,i)=>`<span class="mchip">${esc(v)}<button onclick="removeMaster('${key}',${i})" title="삭제">✖</button></span>`).join('')||'<span class="muted">없음</span>'}</div><div class="addr-row"><input id="madd_${key}" placeholder="추가할 ${esc(label)}" onkeydown="if(event.key==='Enter')addMaster('${key}')"><button class="btn btn-navy mini" onclick="addMaster('${key}')">＋ 추가</button></div></div>`}
+function addMaster(key){const el=$('madd_'+key);const v=(el?el.value:'').trim();if(!v)return toast('값을 입력하세요');state.masters[key]=state.masters[key]||[];if(state.masters[key].includes(v))return toast('이미 있는 항목입니다');state.masters[key].push(v);saveState();renderSettings();toast('추가되었습니다')}
+function removeMaster(key,i){if(!confirm(`"${state.masters[key][i]}" 항목을 삭제할까요?`))return;state.masters[key].splice(i,1);saveState();renderSettings()}
+function renderSettings(){setTitle('설정',`<button class="btn btn-ghost" onclick="backupAll()">전체 백업</button>`);$('app').innerHTML=`<div class="card"><h3>보안 · 연동 설정</h3><div class="grid g2">${field('관리자 PIN',`<input id="set_pin" value="${esc(state.settings.pin)}">`)}${field('Google Apps Script URL',`<input id="set_gas" value="${esc(state.settings.gasUrl)}">`)}${field('Google 전송 PIN',`<input id="set_gaspin" value="${esc(state.settings.gasPin)}">`)}</div><div class="toolbar"><button class="btn btn-navy" onclick="saveSettings()">설정 저장</button><button class="btn btn-ghost" onclick="showAppsScript()">Apps Script 코드 보기</button></div></div><div class="card"><h3>데이터 관리</h3><div class="toolbar"><button class="btn btn-ghost" onclick="backupAll()">전체 백업 다운로드</button><label class="btn btn-ghost">데이터 가져오기<input type="file" accept=".json" style="display:none" onchange="importBackup(event)"></label><button class="btn btn-ghost" onclick="backupLegacyDownload()">기존 데이터 백업 다운로드</button><button class="btn btn-gold" onclick="reMigrate()">기존 데이터 다시 변환</button><button class="btn btn-red" onclick="resetAllData()">전체 초기화</button></div><p class="muted">※ "기존 데이터 다시 변환"은 재고 수량을 초기화하지 않고, 누락된 기존 항목만 안전하게 추가 병합합니다.</p></div><div class="card"><h3>목록 관리 (직접 추가·삭제)</h3><p class="muted">여기서 추가한 항목은 출강관리·물류 화면의 드롭다운에 바로 나타납니다. 드롭다운의 "＋ 직접 입력…"으로도 추가할 수 있습니다.</p><div class="grid g3">${masterEditor('grades','대상학년')}${masterEditor('themes','주제')}${masterEditor('periods','차시')}${masterEditor('companies','출강 업체')}${masterEditor('programs','프로그램명')}${masterEditor('couriers','택배사')}</div></div><div class="card"><h3>기존 체크리스트 보관함</h3>${state.checklist.legacy.length?table(['구분','항목'],state.checklist.legacy.map(x=>[esc(x.type),esc(x.text)])):'<div class="muted">보관된 기존 체크리스트가 없습니다. (활성 체크리스트에 병합됨)</div>'}</div>`}
+function reMigrate(){if(!confirm('기존(구버전) 데이터를 다시 병합할까요?\n재고 수량은 유지되며, 누락된 강사·교구·학년·기록만 추가됩니다.'))return;migrateLegacy();toast('기존 데이터 병합 완료');render()}
+function saveSettings(){state.settings.pin=$('set_pin').value.trim();state.settings.gasUrl=$('set_gas').value.trim();state.settings.gasPin=$('set_gaspin').value.trim();saveState();toast('설정이 저장되었습니다')}
+function backupAll(){downloadJSON(state,'ENK_운영관리_백업_'+nowStamp().replace(/[-: ]/g,'')+'.json')}
+function importBackup(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const obj=JSON.parse(r.result);if(confirm('현재 데이터를 가져온 백업으로 교체할까요?')){state=obj;ensureState();saveState();render()}}catch(err){alert('JSON 파일을 확인해 주세요.')}};r.readAsText(f)}
+function resetAllData(){const text=prompt('전체 초기화를 실행하려면 "초기화"를 입력하세요.');if(text==='초기화'){state=defaultState();saveState();render();toast('초기화되었습니다')}}
+function showAppsScript(){openModal(`<h3>Google Apps Script 코드</h3><p class="muted">아래 코드를 Apps Script에 붙여넣고 웹앱으로 배포한 뒤 URL을 설정에 입력하세요.</p><textarea style="min-height:360px" id="gasCode">${esc(APPS_SCRIPT_CODE)}</textarea><div class="modal-actions"><button class="btn btn-ghost" onclick="copyText(document.getElementById('gasCode').value)">코드 복사</button><button class="btn btn-navy" onclick="closeModal()">닫기</button></div>`)}
+function exportCSV(type){const rows={schedules:state.schedules,shipments:state.shipments,equipment:state.equipment,instructors:state.instructors,orgs:state.orgs,history:state.teacherHistory}[type]||[];const text=jsonToCSV(rows);downloadText('\ufeff'+text,`ENK_${type}_${today()}.csv`,'text/csv;charset=utf-8')}
+function jsonToCSV(rows){if(!rows.length)return '';const flat=rows.map(r=>flatten(r));const keys=[...new Set(flat.flatMap(o=>Object.keys(o)))];return keys.join(',')+'\n'+flat.map(o=>keys.map(k=>`"${String(o[k]??'').replace(/"/g,'""')}"`).join(',')).join('\n')}
+function flatten(obj,prefix='',out={}){Object.entries(obj||{}).forEach(([k,v])=>{const key=prefix?prefix+'.'+k:k;if(v&&typeof v==='object'&&!Array.isArray(v))flatten(v,key,out);else out[key]=Array.isArray(v)?JSON.stringify(v):v});return out}
+function parseCSVLine(line){const out=[];let cur='',q=false;for(let i=0;i<line.length;i++){const ch=line[i];if(q){if(ch==='"'){if(line[i+1]==='"'){cur+='"';i++}else q=false}else cur+=ch}else{if(ch==='"')q=true;else if(ch===',')  {out.push(cur);cur=''}else cur+=ch}}out.push(cur);return out.map(x=>x.trim())}
+function importCSV(event,type){const f=event.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{let content=r.result;if(content.charCodeAt(0)===0xFEFF)content=content.slice(1);const lines=content.split(/\r?\n/).filter(l=>l.trim().length);if(!lines.length)return;const head=parseCSVLine(lines.shift());lines.forEach(line=>{const vals=parseCSVLine(line);const o={};head.forEach((h,i)=>o[h]=vals[i]||'');if(type==='instructors'){const obj={id:uid('t'),name:o['강사명']||'',phone:o['연락처']||'',email:o['메일주소']||'',address:o['주소']||'',detailAddress:o['상세주소']||'',zip:o['우편번호']||'',memo:o['메모']||'',org:o['소속']||''};if(obj.name)handleDuplicate(state.instructors,obj,'name')}if(type==='orgs'){const obj={id:uid('org'),name:o['기관명']||'',manager:o['담당자명']||'',phone:o['연락처']||'',address:o['주소']||'',memo:o['메모']||'',parking:'',entry:'',daily:[]};if(obj.name)handleDuplicate(state.orgs,obj,'name')}});saveState();render();toast('CSV 가져오기가 완료되었습니다')};r.readAsText(f,'utf-8')}
+function handleDuplicate(arr,obj,key){const idx=arr.findIndex(x=>x[key]===obj[key]);if(idx<0)arr.push(obj);else{const sel=prompt(`${obj[key]} 중복 항목이 있습니다. 1=덮어쓰기, 2=건너뛰기, 3=새 항목 추가`,'2');if(sel==='1')arr[idx]={...arr[idx],...obj,id:arr[idx].id};if(sel==='3')arr.push(obj)}}
+function doPrint(html){$('printArea').innerHTML=html;document.body.classList.add('printing');const done=()=>{document.body.classList.remove('printing');$('printArea').innerHTML=''};window.onafterprint=done;setTimeout(()=>{window.print();setTimeout(done,800)},60)}
+function pkv(pairs){return `<table class="p-kv">${pairs.map(([k,v])=>`<tr><td class="k">${esc(k)}</td><td>${esc(v||'-')}</td></tr>`).join('')}</table>`}
+function printSchedule(id){collectScheduleForm(id);const s=state.schedules.find(x=>x.id===id);if(!s)return;const o=s.orgInfo||{};const time=[s.period,s.startTime&&s.endTime?`${s.startTime}~${s.endTime}`:''].filter(Boolean).join(' · ');const clsRows=(s.classes||[]).map((c,i)=>`<tr><td>${esc(c.label||(i+1)+'반')}</td><td>${esc(c.grade)}</td><td>${esc(c.main)}</td><td>${esc(c.sub)}</td><td>${esc(c.equip)}</td><td>${esc(c.theme)}</td><td>${esc(c.equipSend)}</td><td>${c.banner?'○':''}</td><td>${c.guide?'○':''}</td><td>${c.log?'○':''}</td><td>${esc(c.count)}</td></tr>`).join('')||'<tr><td colspan="10">반 없음</td></tr>';const chk=state.checklist.items.map(it=>`<span>${(s.checks?.prep?.includes(it))?'☑':'☐'} ${esc(it)}</span>`).join('');const html=`<div class="p-doc"><div class="p-head"><div class="p-title">[ENK LAB] 출강 상세 체크리스트</div><div class="p-meta">${esc(s.org||'기관 미정')} · ${fmtDate(s.date)||'날짜 미정'} · ${esc(s.program||'')} · 상태 ${esc(s.status||'')}</div></div>
+<div class="p-sec">기본 정보</div>${pkv([['지역',s.region],['차시',s.period],['수업시간',time],['대상학년',s.grade],['출강 업체',s.company],['투입 강사',s.roster]])}
+<div class="p-sec">기관 상세</div>${pkv([['기관 주소',o.address],['담당자',`${o.manager||''} ${o.phone||''}`],['대기실',o.waitingRoom],['도착시간',o.arrivalTime],['출입 방법',o.entry],['주차 안내',o.parking]])}
+<div class="p-sec">반 구성 · 강사 · 교구 배정</div><table class="p-tbl"><thead><tr><th>반</th><th>학년</th><th>메인</th><th>보조</th><th>교구</th><th>주제</th><th>연구용발송</th><th>현수막</th><th>교안</th><th>교육일지</th><th>인원</th></tr></thead><tbody>${clsRows}</tbody></table>
+<div class="p-sec">출강 체크리스트</div><div class="p-chk">${chk}</div>
+<div class="p-foot">출력: ${nowStamp()} · ENK LAB 운영관리 시스템</div></div>`;doPrint(html)}
+function printShipment(id){collectShipmentBasic(id);const sh=state.shipments.find(x=>x.id===id);if(!sh)return;const itemRows=(sh.items||[]).map(it=>`<tr><td>${esc(it.classLabel)}</td><td>${esc(it.teacher)}</td><td>${esc(it.equip)}</td><td>1</td><td>${it.history&&!it.reapproved?'지급이력 있음':(it.infoMissing?'강사정보 미완성':'발송 필요')}</td></tr>`).join('')||'<tr><td colspan="5">항목 없음</td></tr>';const sum=shipmentSummary(sh);const sumRows=sum.length?sum.map(x=>`<tr><td>${esc(x.teacher)}</td><td>${esc(x.equip)}</td><td>${x.qty}</td><td>${getStock(x.equip,x.stockType)}</td></tr>`).join(''):'<tr><td colspan="4">실제 발송 대상 없음</td></tr>';const direct=['직접전달','현장전달'].includes(sh.courier);const basic=[['신청서명',sh.name],['택배사',sh.courier],['송장번호',sh.invoice],['발송일',fmtDate(sh.shipDate)]];if(direct)basic.push(['전달자/장소',`${sh.direct?.person||''} / ${sh.direct?.place||''}`],['전달일',fmtDate(sh.direct?.date||'')]);const html=`<div class="p-doc"><div class="p-head"><div class="p-title">[ENK LAB] 교구 발송 신청서</div><div class="p-meta">${esc(sh.org||'')} · ${fmtDate(sh.date)||'날짜 미정'} · 상태 ${esc(sh.status||'')}</div></div>
+<div class="p-sec">발송 기본정보</div>${pkv(basic)}
+<div class="p-sec">반별 상세표</div><table class="p-tbl"><thead><tr><th>반</th><th>강사</th><th>교구</th><th>발송수량</th><th>확인</th></tr></thead><tbody>${itemRows}</tbody></table>
+<div class="p-sec">실제 발송 요약표 (연구용 1회·1개 지급)</div><table class="p-tbl"><thead><tr><th>강사</th><th>교구</th><th>실제 발송수량</th><th>현재재고</th></tr></thead><tbody>${sumRows}</tbody></table>
+<div class="p-foot">출력: ${nowStamp()} · ENK LAB 운영관리 시스템</div></div>`;doPrint(html)}
+function collectShipmentBasic(id){const sh=state.shipments.find(x=>x.id===id);if(!sh)return;if($('ship_name')){sh.name=$('ship_name').value;sh.date=$('ship_date').value;sh.org=$('ship_org').value;sh.courier=$('ship_courier').value==='__add__'?sh.courier:$('ship_courier').value;sh.invoice=$('ship_invoice').value;sh.shipDate=$('ship_shipDate').value;sh.direct={person:$('dir_person').value,date:$('dir_date').value,place:$('dir_place').value,memo:$('dir_memo').value}}saveState()}
+const DEFAULT_FIRST_NOTICE = `📢 [ENK LAB 강사 단톡방 최초공지 / {출강일}]\n안녕하세요. ENK LAB입니다.\n{출강일} {기관명} 출강 단톡방입니다.\n\n프로그램 : {프로그램명}\n수업시간 : {수업시간}\n강사명단 : {강사명단}\n\n반별 배정\n{반별배정}\n\n교구목록 : {교구목록}\n교안 및 최종 안내는 출강 전 다시 공지드리겠습니다.\n공지 확인 후 톡방에 '확인' 또는 하트(❤️)를 남겨주세요.\n\nENK LAB`;
+const DEFAULT_FINAL_NOTICE = `📢 [ENK LAB 출강 전 최종 안내 / {출강일} 필독]\n안녕하세요. ENK LAB입니다.\n{출강일} 출강과 관련하여 아래 내용을 반드시 확인해 주세요.\n\n───\n\n📍 강사 대기실 도착시간 및 장소\n• 도착시간 : {대기실도착시간} 까지\n• 장소 : {대기실장소}\n• 기관주소 : {기관주소}\n• 주차안내 : {주차안내}\n• 출입방법 : {출입방법}\n도착 후 담당자 안내에 따라 출석 확인, 교구 확인, 수업 준비를 진행해 주세요.\n\n───\n\n✅ 1. 출발 전 최종 체크리스트\n• 개인 노트북\n• 충전기 및 마우스\n• HDMI 케이블\n• USB\n• 수업자료 PPT\n• 출강 교안 및 진행 순서\n• 강사용 교구\n• 유성매직 5~10세트\n• 실내화\n• 개인 간식이 필요한 경우 개별 준비\n\n───\n\n✅ 2. 코칭세트& 교구별 실습 준비물\n• 매직세트를 요청하지 않으신 강사님께서는 모둠당 매직 1~2개를 준비해 주세요.\n• 교구별 추가 필요한 준비물 확인(칼,양면테이프,투명테이프 등 교구별 상이)\n\n───\n\n✅ 3. 강사용 교구 발송 안내\n강사용 교구는 별도 안내된 일정에 따라 발송됩니다.\n강사연습용 교구 수령을 원하시는 강사님께서는 개인톡으로 교구수령주소를 보내주시기 바랍니다.\n\n───\n\n✅ 4. 간식 안내\n2차시 수업에는 간식이 따로 제공되지 않습니다.\n반별간식이 필요하신 강사님께서는 개별적으로 준비해 주세요.\n\n───\n\n✅ 5. 용모 복장 & 실내화 착용\n교실 입실 시 반드시 실내화를 착용해 주세요.\n\n───\n\n✅ 6. 수업 시간 준수\n• 수업은 정해진 시간에 맞추어 운영해 주세요.\n• 수업이 일찍 마무리될 경우 복습, 질의응답, 활동 정리 등을 진행해 주세요.\n• 종이 울린 후 수업을 마무리하고 퇴실해 주세요.\n\n───\n\n✅ 7. 교구 및 준비물 관리\n• 제공된 교구 및 준비물은 사용 후 반드시 수량과 상태를 확인해 주세요.\n• 분실 및 파손이 발생하지 않도록 관리해 주세요.\n• 사용 후에는 빠짐없이 반납해 주세요.\n\n───\n\n✅ 8. 쓰레기 정리\n설문지 작성 전, 발생한 쓰레기는 교구 안에 동봉된 봉투에 모두 수거해 주세요.\n수업 종료 후 쓰레기 봉투는 강사 대기실로 가져와 주세요.\n\n───\n\n✅ 9. 교육사진 촬영 재확인\n출강일지 작성을 위해 수업 중 아래 사진을 꼭 촬영해 주세요.\n• 개별활동 사진\n• 모둠활동 사진\n• 전체 수업 사진\n• 현수막 단체사진\n※ 특히 전체 사진은 16:9 비율로, 수업 전체가 보이도록 촬영 부탁드립니다.\n\n───\n\nENK 진행하는 진로직업 특강 or 캠프는 학생들이 주제 이론과 교구 실습을 함께 경험하는 수업입니다.\n학생들에게 좋은 경험이 될 수 있도록 사전 준비와 전문적인 수업 운영을 부탁드립니다.\n감사합니다.\n\nENK LAB`;
+const DEFAULT_AFTER_NOTICE = `📢 [ENK LAB 출강 후 제출 안내]\n안녕하세요. ENK LAB입니다.\n오늘 출강 진행해 주신 강사님들 모두 수고 많으셨습니다.\n강사비 정산 및 기관 제출 자료 정리를 위해 아래 서류를 기한 내 제출해 주세요.\n\n───\n\n✅ 1. 제출 서류\n① 일일 출강교육일지\n② 강사료 청구서\n※ 두 가지 서류가 모두 제출 완료되어야 강사비 지급이 가능합니다.\n\n───\n\n✅ 2. 일일 출강교육일지 작성 내용\n① 교육내용\n② 교육활동 내용\n③ 개별활동 사진\n④ 모둠활동 사진\n⑤ 전체사진 및 단체사진\n⑥ 강사 자가평가\n⑦ 개선사항\n\n───\n\n✅ 3. 사진 제출 확인\n• 개별활동 사진\n• 모둠활동 사진\n• 전체 사진\n• 현수막 단체사진\n\n───\n\n✅ 4. 제출 기한\n📌 일일 출강교육일지 제출 마감 : 출강 후 3일 이내, {교육일지마감}까지\n📌 강사료 청구서 제출 마감 : 해당 월 말일, {강사료청구서마감}까지\n\n───\n\n✅ 5. 수업 후 특이사항 공유\n• 교구 파손 또는 분실\n• 학생 안전 관련 사항\n• 수업 운영 중 어려웠던 점\n• 학교 또는 담당교사 요청사항\n• 다음 수업 시 보완이 필요한 부분\n\n───\n\n오늘도 학생들에게 좋은 경험을 전해주셔서 감사합니다.\n제출 자료 확인 후 정산 절차가 진행될 수 있도록 기한 내 제출 부탁드립니다.\n감사합니다.\nENK LAB`;
+const APPS_SCRIPT_CODE = `function doPost(e){\n  var payload = JSON.parse(e.postData.contents || '{}');\n  var ss = SpreadsheetApp.getActiveSpreadsheet();\n  var now = new Date();\n  var stamp = Utilities.formatDate(now, Session.getScriptTimeZone(), 'yyyy-MM-dd_HHmm');\n  Object.keys(payload.tabs || {}).forEach(function(tab){\n    var sheetName = stamp + '_' + tab;\n    var sheet = ss.insertSheet(sheetName);\n    var rows = payload.tabs[tab] || [];\n    if(!rows.length){ sheet.getRange(1,1).setValue('데이터 없음'); return; }\n    var flat = rows.map(flatten);\n    var keys = [];\n    flat.forEach(function(o){ Object.keys(o).forEach(function(k){ if(keys.indexOf(k)<0) keys.push(k); }); });\n    sheet.getRange(1,1,1,keys.length).setValues([keys]);\n    sheet.getRange(2,1,flat.length,keys.length).setValues(flat.map(function(o){ return keys.map(function(k){ return o[k] || ''; }); }));\n  });\n  return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(ContentService.MimeType.JSON);\n}\nfunction flatten(obj,prefix,out){\n  out = out || {}; prefix = prefix || '';\n  Object.keys(obj || {}).forEach(function(k){\n    var v = obj[k]; var key = prefix ? prefix + '.' + k : k;\n    if(v && typeof v === 'object' && !Array.isArray(v)){ flatten(v,key,out); }\n    else { out[key] = Array.isArray(v) ? JSON.stringify(v) : v; }\n  });\n  return out;\n}`;
+function initSetup(){if(!state.settings.pin){openModal(`<h3>ENK LAB 운영관리 시스템 첫 설정</h3><p class="muted">관리자 PIN을 설정합니다. 이후 설정에서 변경할 수 있습니다.</p><div class="field"><label>관리자 PIN</label><input id="first_pin" placeholder="4자리 이상 권장"></div><div class="modal-actions"><button class="btn btn-navy" onclick="completeFirstSetup()">설정 후 시작</button></div>`);return true}return false}
+function completeFirstSetup(){const p=$('first_pin').value.trim();if(!p)return toast('비밀번호를 입력하세요');state.settings.pin=p;saveState();closeModal();if(detectLegacy()&&!localStorage.getItem(LEGACY_DONE_KEY)){openModal(`<h3>기존 데이터가 발견되었습니다</h3><p class="muted">업데이트 전 자동 백업 후 새 시스템으로 변환합니다. 기존 localStorage 키는 삭제하지 않고 그대로 보존됩니다.</p><div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal();render()">나중에 하기</button><button class="btn btn-navy" onclick="backupLegacyDownload();migrateLegacy();closeModal();render()">백업 후 변환 시작</button></div>`)}else render()}
+function init(){loadState();if(!state.settings.pin){const lp=ls(LEGACY_KEYS.pin);if(lp){state.settings.pin=lp;saveState()}}if(initSetup())return;if(detectLegacy()&&!localStorage.getItem(LEGACY_DONE_KEY)){openModal(`<h3>기존 데이터가 발견되었습니다</h3><p class="muted">업데이트 전 자동 백업 후 새 시스템으로 변환합니다. 기존 데이터는 삭제하지 않습니다.</p><div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal();render()">나중에 하기</button><button class="btn btn-navy" onclick="backupLegacyDownload();migrateLegacy();closeModal();render()">백업 후 변환 시작</button></div>`)}render()}
+init();
 </script>
 </body>
 </html>
